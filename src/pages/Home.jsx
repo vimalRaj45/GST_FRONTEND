@@ -9,7 +9,7 @@ import {
   BsShieldCheck, BsGraphUp, BsCurrencyRupee, BsInfoCircle
 } from 'react-icons/bs';
 
-const LOGO_URL = 'https://aadhirasolutions-hacakthon.onrender.com/logo.png';
+const LOGO_URL = '/logo.png';
 
 const concepts = [
   {

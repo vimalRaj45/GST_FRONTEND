@@ -9,7 +9,7 @@ import {
 import { tutorChat } from '../api/client.js';
 import { useAppStore } from '../store/useAppStore.js';
 
-const LOGO_URL = 'https://aadhirasolutions-hacakthon.onrender.com/logo.png';
+const LOGO_URL = '/logo.png';
 
 const WELCOME = `Hello! I'm your **GST Tutor** by Aadhira Solutions.
 

@@ -32,7 +32,7 @@ import Quiz from './pages/Quiz.jsx';
 import HowToUse from './pages/HowToUse.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 
-const LOGO_URL = 'https://aadhirasolutions-hacakthon.onrender.com/logo.png';
+const LOGO_URL = '/logo.png';
 
 const NAV_ITEMS = [
   { label: 'Overview', path: '/', icon: BsLayoutTextSidebarReverse },

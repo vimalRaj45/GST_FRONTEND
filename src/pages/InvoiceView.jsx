@@ -10,7 +10,7 @@ import StatusChip from '../components/StatusChip.jsx';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
-const LOGO_URL = 'https://aadhirasolutions-hacakthon.onrender.com/logo.png';
+const LOGO_URL = '/logo.png';
 
 export default function InvoiceView() {
   const { id } = useParams();
