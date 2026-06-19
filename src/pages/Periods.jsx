@@ -12,12 +12,14 @@ import { getPeriods, closePeriod } from '../api/client.js';
 import { useAppStore } from '../store/useAppStore.js';
 import ExplainerCallout from '../components/ExplainerCallout.jsx';
 import StatusChip from '../components/StatusChip.jsx';
+import useProgressStore from '../store/useProgressStore.js';
 
 export default function Periods() {
   const navigate = useNavigate();
   const muiTheme = useTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('sm'));
   const { business } = useAppStore();
+  const { markModule } = useProgressStore();
   const [periods, setPeriods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -40,6 +42,7 @@ export default function Periods() {
         ? `Period ${period.month}/${period.year} was already closed.`
         : `Period ${period.month}/${period.year} closed! GSTR-1 generated.`;
       setSnack({ open: true, message: msg, severity: res.alreadyClosed ? 'info' : 'success' });
+      if (!res.alreadyClosed) markModule('closedPeriod');
       loadPeriods();
     } catch (err) {
       setPeriods((prev) => prev.map((p) => p.id === period.id ? { ...p, status: 'open', _optimistic: false } : p));
@@ -94,18 +97,32 @@ export default function Periods() {
                   </Button>
                 )}
                 {p.status === 'closed' && (
-                  <Button fullWidth variant="contained" color="success" size="small"
-                    startIcon={<BsFileEarmarkText size={14} />}
-                    onClick={() => navigate(`/periods/${p.id}/file`)}>
-                    File Return
-                  </Button>
+                  <Stack spacing={1}>
+                    <Button fullWidth variant="outlined" size="small"
+                      startIcon={<BsFileEarmarkText size={14} />}
+                      onClick={() => navigate(`/periods/${p.id}/gstr1`)}>
+                      View GSTR-1
+                    </Button>
+                    <Button fullWidth variant="contained" color="success" size="small"
+                      startIcon={<BsFileEarmarkText size={14} />}
+                      onClick={() => navigate(`/periods/${p.id}/file`)}>
+                      File Return
+                    </Button>
+                  </Stack>
                 )}
                 {(p.status === 'filed' || p.status === 'late') && (
-                  <Button fullWidth variant="outlined" size="small"
-                    startIcon={<BsEyeFill size={14} />}
-                    onClick={() => navigate(`/periods/${p.id}/file`)}>
-                    View Filing
-                  </Button>
+                  <Stack spacing={1}>
+                    <Button fullWidth variant="outlined" size="small"
+                      startIcon={<BsFileEarmarkText size={14} />}
+                      onClick={() => navigate(`/periods/${p.id}/gstr1`)}>
+                      View GSTR-1
+                    </Button>
+                    <Button fullWidth variant="outlined" size="small"
+                      startIcon={<BsEyeFill size={14} />}
+                      onClick={() => navigate(`/periods/${p.id}/file`)}>
+                      View GSTR-3B
+                    </Button>
+                  </Stack>
                 )}
               </Box>
             </Card>
@@ -155,17 +172,24 @@ export default function Periods() {
                             {closingId === p.id ? 'Closing...' : 'Close'}
                           </Button>
                         )}
+                        {(p.status === 'closed' || p.status === 'filed' || p.status === 'late') && (
+                          <Button size="small" variant="outlined"
+                            startIcon={<BsFileEarmarkText size={13} />}
+                            onClick={() => navigate(`/periods/${p.id}/gstr1`)}>
+                            GSTR-1
+                          </Button>
+                        )}
                         {p.status === 'closed' && (
                           <Button size="small" variant="contained" color="success"
                             startIcon={<BsFileEarmarkText size={13} />}
                             onClick={() => navigate(`/periods/${p.id}/file`)}>
-                            File Return
+                            File 3B
                           </Button>
                         )}
                         {(p.status === 'filed' || p.status === 'late') && (
                           <Button size="small" variant="outlined" startIcon={<BsEyeFill size={13} />}
                             onClick={() => navigate(`/periods/${p.id}/file`)}>
-                            View
+                            View 3B
                           </Button>
                         )}
                       </Stack>

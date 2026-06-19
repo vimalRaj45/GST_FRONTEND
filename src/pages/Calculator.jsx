@@ -13,10 +13,24 @@ import ExplainerCallout from '../components/ExplainerCallout.jsx';
 
 const TAX_RATES = [0, 5, 12, 18, 28];
 const TRANSACTION_TYPES = [
-  { value: 'regular',        label: 'Regular (B2B / B2C)' },
-  { value: 'export',         label: 'Export (Zero-rated, ITC claimable)' },
-  { value: 'exempt',         label: 'Exempt (No tax, no ITC)' },
+  { value: 'regular', label: 'Regular (B2B / B2C)' },
+  { value: 'export', label: 'Export (Zero-rated, ITC claimable)' },
+  { value: 'exempt', label: 'Exempt (No tax, no ITC)' },
   { value: 'reverse_charge', label: 'Reverse Charge (buyer pays)' },
+  { value: 'composition', label: 'Composition Scheme (flat rate)' },
+];
+const COMPOSITION_RATES = [
+  { type: 'Trader / Manufacturer', rate: 1 },
+  { type: 'Restaurant', rate: 5 },
+  { type: 'Other Services', rate: 6 },
+];
+const SERVICE_POS_RULES = [
+  { service: 'IT / Consulting Services', rule: 'POS = Location of the recipient', note: 'If recipient is in different state → IGST applies' },
+  { service: 'Banking & Financial', rule: 'POS = Location of the recipient (if known)', note: 'Otherwise: location of the supplier' },
+  { service: 'Insurance', rule: 'POS = Location of recipient', note: 'Same as regular services' },
+  { service: 'Telecom Services', rule: 'POS = Location where SIM is registered', note: 'Special rule — not based on recipient' },
+  { service: 'Construction / Immovable Property', rule: 'POS = Location of the property', note: 'Always where the property is located' },
+  { service: 'Restaurant / Catering', rule: 'POS = Where services are performed', note: 'CGST+SGST always, even for tourists' },
 ];
 
 function TaxCard({ label, value, color = '#1a3c6e', highlight = false }) {
@@ -39,15 +53,22 @@ function TaxCard({ label, value, color = '#1a3c6e', highlight = false }) {
 }
 
 export default function Calculator() {
-  const [form, setForm] = useState({ amount: 10000, rate: 18, isInterstate: false, transactionType: 'regular' });
+  const [form, setForm] = useState({ amount: 10000, rate: 18, isInterstate: false, transactionType: 'regular', supplyType: 'goods', compositionType: 0 });
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [liveCalc, setLiveCalc] = useState(null);
+  const [showPoS, setShowPoS] = useState(false);
 
   useEffect(() => {
     const amt = Number(form.amount) || 0;
-    const r   = Number(form.rate);
+    const r = Number(form.rate);
+    if (form.transactionType === 'composition') {
+      const compRate = COMPOSITION_RATES[form.compositionType]?.rate || 1;
+      const tax = Math.round(amt * compRate / 100 * 100) / 100;
+      setLiveCalc({ cgst: 0, sgst: 0, igst: 0, compositionTax: tax, totalTax: tax, totalValue: amt + tax });
+      return;
+    }
     if (amt <= 0 || form.transactionType === 'exempt' || form.transactionType === 'export') {
       setLiveCalc({ cgst: 0, sgst: 0, igst: 0, totalTax: 0, totalValue: amt });
       return;
@@ -85,10 +106,56 @@ export default function Calculator() {
   return (
     <Box>
       <ExplainerCallout title="How GST is Calculated">
-        <strong>Intra-state</strong>: CGST (half rate) + SGST (half rate). <strong>Inter-state</strong>: Full IGST only.
-        Exports are zero-rated — no tax charged, but ITC is still claimable.
-        Exempt goods: no tax and no ITC.
+        <strong>Intra-state (Goods)</strong>: CGST (half rate) + SGST (half rate). <strong>Inter-state</strong>: Full IGST only.
+        For <strong>services</strong>, Place of Supply (POS) is determined by the recipient's location — not the delivery point.
+        Exports are zero-rated. Exempt supplies carry no tax and no ITC.
       </ExplainerCallout>
+
+      {/* Supply Type Toggle */}
+      <Card sx={{ mb: 3, border: '1.5px solid #1a3c6e25' }}>
+        <CardContent sx={{ p: 2 }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between">
+            <Box>
+              <Typography fontWeight={700} fontSize="0.9rem">Supply Type</Typography>
+              <Typography variant="caption" color="text.secondary">Services have different Place of Supply rules than goods</Typography>
+            </Box>
+            <Stack direction="row" spacing={1}>
+              {['goods', 'services'].map((t) => (
+                <Box key={t} onClick={() => setForm((f) => ({ ...f, supplyType: t }))}
+                  sx={{
+                    px: 2.5, py: 1, borderRadius: 2, cursor: 'pointer', fontWeight: 700, fontSize: '0.875rem',
+                    border: '2px solid', borderColor: form.supplyType === t ? 'primary.main' : 'divider',
+                    bgcolor: form.supplyType === t ? 'primary.main' : 'transparent',
+                    color: form.supplyType === t ? 'white' : 'text.secondary',
+                    transition: 'all 0.15s', textTransform: 'capitalize',
+                  }}>
+                  {t === 'goods' ? '📦 Goods' : '🛠️ Services'}
+                </Box>
+              ))}
+            </Stack>
+          </Stack>
+          {form.supplyType === 'services' && (
+            <Alert severity="info" sx={{ mt: 2, fontSize: '0.82rem' }}>
+              <strong>Services — Place of Supply Rule:</strong> For services, POS is generally the <strong>location of the recipient</strong>.
+              If recipient and supplier are in different states → IGST applies, even if service is delivered locally.
+              <Button size="small" sx={{ ml: 1, fontSize: '0.75rem' }} onClick={() => setShowPoS((v) => !v)}>
+                {showPoS ? 'Hide' : 'View'} POS Rules
+              </Button>
+            </Alert>
+          )}
+          {showPoS && form.supplyType === 'services' && (
+            <Box sx={{ mt: 2, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.5 }}>
+              {SERVICE_POS_RULES.map(({ service, rule, note }) => (
+                <Box key={service} sx={{ p: 2, borderRadius: 2, border: '1px solid #1a3c6e25', bgcolor: '#f8f9fa' }}>
+                  <Typography fontWeight={700} fontSize="0.82rem" color="primary.main">{service}</Typography>
+                  <Typography variant="caption" display="block" fontWeight={600} sx={{ mt: 0.5 }}>{rule}</Typography>
+                  <Typography variant="caption" color="text.secondary">{note}</Typography>
+                </Box>
+              ))}
+            </Box>
+          )}
+        </CardContent>
+      </Card>
 
       <Grid container spacing={{ xs: 2, md: 3 }}>
         {/* Input Panel */}
@@ -111,15 +178,37 @@ export default function Calculator() {
                     required fullWidth
                   />
 
-                  <TextField select label="Tax Rate" name="rate" value={form.rate} onChange={handleChange} fullWidth>
-                    {TAX_RATES.map((r) => (
-                      <MenuItem key={r} value={r}>{r}%{r === 0 ? ' — Nil / Exempt' : ''}</MenuItem>
+                  <TextField select label="Transaction Type" name="transactionType" value={form.transactionType} onChange={handleChange} fullWidth>
+                    {TRANSACTION_TYPES.map((t) => (
+                      <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>
                     ))}
                   </TextField>
 
-                  <TextField select label="Transaction Type" name="transactionType" value={form.transactionType} onChange={handleChange} fullWidth>
-                    {TRANSACTION_TYPES.map((t) => <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>)}
-                  </TextField>
+                  {form.transactionType === 'composition' ? (
+                    <Box sx={{ p: 2, bgcolor: '#fff8e1', border: '2px solid #f57f1730', borderRadius: 2 }}>
+                      <Typography fontWeight={700} fontSize="0.875rem" color="#f57f17" sx={{ mb: 1 }}>
+                        🏪 Composition Scheme
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ mb: 1.5, display: 'block' }}>
+                        Composition dealers pay a flat low rate on total turnover. No CGST/SGST/IGST split — one single flat payment.
+                        They <strong>cannot issue Tax Invoices</strong> and <strong>cannot claim ITC</strong>.
+                      </Typography>
+                      <TextField select label="Business Type" size="small" fullWidth
+                        value={form.compositionType}
+                        onChange={(e) => setForm((f) => ({ ...f, compositionType: Number(e.target.value) }))}
+                      >
+                        {COMPOSITION_RATES.map((r, i) => (
+                          <MenuItem key={r.type} value={i}>{r.type} — {r.rate}% flat</MenuItem>
+                        ))}
+                      </TextField>
+                    </Box>
+                  ) : (
+                    <TextField select label="Tax Rate" name="rate" value={form.rate} onChange={handleChange} fullWidth>
+                      {TAX_RATES.map((r) => (
+                        <MenuItem key={r} value={r}>{r}%{r === 0 ? ' — Nil / Exempt' : ''}</MenuItem>
+                      ))}
+                    </TextField>
+                  )}
 
                   <Box
                     sx={{ p: 2, border: '1.5px solid', borderColor: form.isInterstate ? 'info.main' : 'divider', borderRadius: 2, cursor: 'pointer', transition: 'all 0.2s' }}
@@ -203,6 +292,13 @@ export default function Calculator() {
               {form.transactionType === 'regular' && !form.isInterstate && Number(display.totalTax) > 0 && (
                 <Alert severity="success" icon={<BsCheckCircle />} sx={{ mt: 2, fontSize: '0.82rem' }}>
                   Intra-state: Tax split equally as CGST ₹{display.cgst?.toFixed(2)} + SGST ₹{display.sgst?.toFixed(2)}.
+                </Alert>
+              )}
+              {form.transactionType === 'composition' && (
+                <Alert severity="warning" icon={<BsExclamationTriangle />} sx={{ mt: 2, fontSize: '0.82rem' }}>
+                  <strong>Composition Scheme:</strong> Flat rate of {COMPOSITION_RATES[form.compositionType]?.rate}% applied on turnover.
+                  Composition dealers <strong>cannot issue Tax Invoices</strong>, <strong>cannot collect GST from buyers</strong>,
+                  and <strong>cannot claim ITC</strong> on purchases.
                 </Alert>
               )}
             </CardContent>

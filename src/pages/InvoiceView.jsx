@@ -4,11 +4,12 @@ import {
   TableCell, TableHead, TableRow, Chip, CircularProgress, Alert, Button, Stack
 } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
-import { BsPrinter, BsArrowLeft, BsGlobe, BsGeoAlt, BsDownload } from 'react-icons/bs';
+import { BsPrinter, BsArrowLeft, BsGlobe, BsGeoAlt, BsDownload, BsTruck } from 'react-icons/bs';
 import { getInvoice } from '../api/client.js';
 import StatusChip from '../components/StatusChip.jsx';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+
 
 const LOGO_URL = '/logo.png';
 
@@ -20,9 +21,17 @@ export default function InvoiceView() {
   const [error, setError] = useState(null);
   const printableRef = useRef(null);
   const [downloading, setDownloading] = useState(false);
+  const [eWayEligible, setEWayEligible] = useState(false);
 
   useEffect(() => {
-    getInvoice(id).then(setInvoice).catch((e) => setError(e.message)).finally(() => setLoading(false));
+    getInvoice(id)
+      .then((inv) => {
+        setInvoice(inv);
+        const total = inv.items?.reduce((s, it) => s + Number(it.total_value || 0), 0) || 0;
+        setEWayEligible(total >= 50000);
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   }, [id]);
 
   const handleDownloadPdf = async () => {
@@ -78,21 +87,30 @@ export default function InvoiceView() {
   return (
     <Box maxWidth={960} mx="auto">
       {/* Action bar — hidden on print */}
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2, '@media print': { display: 'none' } }}>
-        <Button startIcon={<BsArrowLeft size={16} />} onClick={() => navigate(-1)}>Back</Button>
-        <Stack direction="row" spacing={1.5}>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={downloading ? <CircularProgress size={16} color="inherit" /> : <BsDownload size={16} />}
-            onClick={handleDownloadPdf}
-            disabled={downloading}
-          >
-            {downloading ? 'Downloading...' : 'Download PDF'}
-          </Button>
-          <Button variant="outlined" startIcon={<BsPrinter size={16} />} onClick={() => window.print()}>Print Invoice</Button>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2, '@media print': { display: 'none' } }}>
+          <Button startIcon={<BsArrowLeft size={16} />} onClick={() => navigate(-1)}>Back</Button>
+          <Stack direction="row" spacing={1.5}>
+            {eWayEligible && (
+              <Button
+                variant="outlined" color="success"
+                startIcon={<BsTruck size={16} />}
+                onClick={() => navigate(`/ewaybill?invoiceId=${id}`)}
+              >
+                E-Way Bill
+              </Button>
+            )}
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={downloading ? <CircularProgress size={16} color="inherit" /> : <BsDownload size={16} />}
+              onClick={handleDownloadPdf}
+              disabled={downloading}
+            >
+              {downloading ? 'Downloading...' : 'Download PDF'}
+            </Button>
+            <Button variant="outlined" startIcon={<BsPrinter size={16} />} onClick={() => window.print()}>Print Invoice</Button>
+          </Stack>
         </Stack>
-      </Stack>
 
       <Card ref={printableRef} sx={{ border: '2px solid', borderColor: 'primary.main', '@media print': { boxShadow: 'none', border: '1px solid #ccc' } }}>
         {/* Invoice Header */}

@@ -9,6 +9,7 @@ import {
 import { generateQuizQuestion, saveQuizAttempt } from '../api/client.js';
 import { useAppStore } from '../store/useAppStore.js';
 import ExplainerCallout from '../components/ExplainerCallout.jsx';
+import useProgressStore from '../store/useProgressStore.js';
 
 const TOPICS = [
   'Input Tax Credit (ITC) rules and eligibility',
@@ -25,6 +26,7 @@ const TOPICS = [
 
 export default function Quiz() {
   const { sessionId } = useAppStore();
+  const { addQuizAttempt } = useProgressStore();
   const [topic, setTopic] = useState(TOPICS[0]);
   const [question, setQuestion] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -45,6 +47,7 @@ export default function Quiz() {
     setSubmitted(true);
     const isCorrect = Number(selected) === question.correctIndex;
     setScore((s) => ({ correct: s.correct + (isCorrect ? 1 : 0), total: s.total + 1 }));
+    addQuizAttempt(topic, isCorrect);
     try {
       await saveQuizAttempt({ session_id: sessionId, topic, question_payload_json: question, selected_answer: Number(selected), is_correct: isCorrect, ai_explanation: question.explanation });
     } catch (_) {}

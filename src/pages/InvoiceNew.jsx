@@ -13,6 +13,7 @@ import { createInvoice, getHsnCodes, listBusinesses, getPeriods } from '../api/c
 import { useAppStore } from '../store/useAppStore.js';
 import ExplainerCallout from '../components/ExplainerCallout.jsx';
 import StatusChip from '../components/StatusChip.jsx';
+import useProgressStore from '../store/useProgressStore.js';
 
 const TAX_RATES = [0, 5, 12, 18, 28];
 const INVOICE_TYPES = [
@@ -47,8 +48,14 @@ function calcItemTax(item, isInterstate) {
 export default function InvoiceNew() {
   const navigate = useNavigate();
   const { business, sessionId } = useAppStore();
+  const { markModule } = useProgressStore();
+  const isComposition = business?.scheme_type === 'composition';
   const [step, setStep] = useState(0);
-  const [header, setHeader] = useState({ buyer_business_id: '', invoice_type: 'tax_invoice', transaction_type: 'regular', tax_period_id: '', notes: '' });
+  const [header, setHeader] = useState({
+    buyer_business_id: '',
+    invoice_type: isComposition ? 'bill_of_supply' : 'tax_invoice',
+    transaction_type: 'regular', tax_period_id: '', notes: '',
+  });
   const [items, setItems] = useState([defaultItem()]);
   const [buyers, setBuyers] = useState([]);
   const [periods, setPeriods] = useState([]);
@@ -103,6 +110,7 @@ export default function InvoiceNew() {
       });
       setCreatedInvoice(res);
       setStep(3);
+      markModule('createdInvoice');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -118,6 +126,19 @@ export default function InvoiceNew() {
 
   return (
     <Box>
+      {/* Composition Scheme Banner */}
+      {isComposition && (
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          <Typography fontWeight={700}>🏪 Composition Scheme — Restricted Invoice Mode</Typography>
+          <Typography variant="body2" sx={{ mt: 0.5 }}>
+            <strong>{business.name}</strong> is on the Composition Scheme.
+            You can only issue <strong>Bill of Supply</strong> (not Tax Invoices).
+            You <strong>cannot collect GST from buyers</strong>, and buyers <strong>cannot claim ITC</strong> from your invoices.
+            Your flat GST rate is paid directly to the government on your total turnover.
+          </Typography>
+        </Alert>
+      )}
+
       <ExplainerCallout title="Creating a Tax Invoice">
         A Tax Invoice is the core GST document — it records the sale, calculates tax, and creates an ITC entry for the
         buyer. Intra-state = CGST + SGST. Inter-state = IGST. All items and ITC entries are saved atomically.
@@ -154,8 +175,14 @@ export default function InvoiceNew() {
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField select label="Invoice Type" value={header.invoice_type}
-                  onChange={(e) => setHeader((h) => ({ ...h, invoice_type: e.target.value }))} fullWidth>
-                  {INVOICE_TYPES.map((t) => <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>)}
+                  onChange={(e) => setHeader((h) => ({ ...h, invoice_type: e.target.value }))} fullWidth
+                  disabled={isComposition}
+                  helperText={isComposition ? 'Composition dealers can only issue Bill of Supply' : ''}
+                >
+                  {INVOICE_TYPES
+                    .filter((t) => !isComposition || t.value === 'bill_of_supply')
+                    .map((t) => <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>)
+                  }
                 </TextField>
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -163,6 +190,13 @@ export default function InvoiceNew() {
                   onChange={(e) => setHeader((h) => ({ ...h, transaction_type: e.target.value }))} fullWidth>
                   {TX_TYPES.map((t) => <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>)}
                 </TextField>
+                {header.transaction_type === 'reverse_charge' && (
+                  <Alert severity="info" sx={{ mt: 1, fontSize: '0.78rem' }}>
+                    <strong>RCM (Reverse Charge):</strong> The <em>buyer</em> pays GST directly to the government,
+                    not the seller. The buyer self-reports this tax in GSTR-3B Table 3.1(d) and can claim ITC on it.
+                    Common for: legal services, GTA, security services.
+                  </Alert>
+                )}
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField select label="Tax Period" value={header.tax_period_id}

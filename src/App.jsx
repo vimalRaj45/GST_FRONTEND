@@ -10,7 +10,8 @@ import {
   BsHouseDoor, BsBuilding, BsCalculator, BsReceiptCutoff,
   BsWallet2, BsCalendarCheck, BsPatchQuestion, BsList, BsX,
   BsPersonCircle, BsChevronRight, BsInfoCircle,
-  BsLayoutTextSidebarReverse, BsReceipt, BsJournalText, BsMortarboard
+  BsLayoutTextSidebarReverse, BsReceipt, BsJournalText, BsMortarboard,
+  BsCardList, BsTrophy, BsTruck
 } from 'react-icons/bs';
 
 import theme from './theme.js';
@@ -31,6 +32,10 @@ import FilingReview from './pages/FilingReview.jsx';
 import Quiz from './pages/Quiz.jsx';
 import HowToUse from './pages/HowToUse.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
+import Gstr1View from './pages/Gstr1View.jsx';
+import HsnExplorer from './pages/HsnExplorer.jsx';
+import Progress from './pages/Progress.jsx';
+import EWayBill from './pages/EWayBill.jsx';
 
 const LOGO_URL = '/logo.png';
 
@@ -40,7 +45,9 @@ const NAV_ITEMS = [
   { label: 'Invoices', path: '/invoices/new', icon: BsReceipt },
   { label: 'ITC Ledger', path: '/ledger', icon: BsJournalText },
   { label: 'Returns', path: '/periods', icon: BsCalendarCheck },
+  { label: 'HSN Codes', path: '/hsn-explorer', icon: BsCardList },
   { label: 'Quiz', path: '/quiz', icon: BsMortarboard },
+  { label: 'Progress', path: '/progress', icon: BsTrophy },
 ];
 
 function Layout({ children }) {
@@ -299,10 +306,14 @@ export default function App() {
                 <Route path="/invoices/new"    element={<InvoiceNew />} />
                 <Route path="/invoices/:id"    element={<InvoiceView />} />
                 <Route path="/ledger"          element={<Ledger />} />
-                <Route path="/periods"         element={<Periods />} />
-                <Route path="/periods/:id/file" element={<FilingReview />} />
-                <Route path="/quiz"            element={<Quiz />} />
-                <Route path="/admin"           element={<AdminDashboard />} />
+                <Route path="/periods"            element={<Periods />} />
+                <Route path="/periods/:id/file"   element={<FilingReview />} />
+                <Route path="/periods/:id/gstr1"  element={<Gstr1View />} />
+                <Route path="/hsn-explorer"       element={<HsnExplorer />} />
+                <Route path="/progress"           element={<Progress />} />
+                <Route path="/ewaybill"           element={<EWayBill />} />
+                <Route path="/quiz"               element={<Quiz />} />
+                <Route path="/admin"              element={<AdminDashboard />} />
               </Routes>
             </Layout>
           } />

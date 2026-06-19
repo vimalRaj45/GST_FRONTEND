@@ -10,9 +10,11 @@ import { getITCSummary, getPeriods, explainITCStatus } from '../api/client.js';
 import { useAppStore } from '../store/useAppStore.js';
 import ExplainerCallout from '../components/ExplainerCallout.jsx';
 import StatusChip from '../components/StatusChip.jsx';
+import useProgressStore from '../store/useProgressStore.js';
 
 export default function Ledger() {
   const { business } = useAppStore();
+  const { markModule } = useProgressStore();
   const [periods, setPeriods] = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [summary, setSummary] = useState(null);
@@ -21,6 +23,8 @@ export default function Ledger() {
   const [explainDialog, setExplainDialog] = useState({ open: false, entryId: null });
   const [explanation, setExplanation] = useState(null);
   const [explaining, setExplaining] = useState(false);
+
+  useEffect(() => { markModule('viewedLedger'); }, []);
 
   useEffect(() => {
     if (business?.id) {
@@ -47,6 +51,9 @@ export default function Ledger() {
   }, []);
 
   if (!business) return <Alert severity="warning" action={<Button href="/register">Register</Button>}>Please register a business first.</Alert>;
+
+  // Composition scheme warning
+  const isComposition = business.scheme_type === 'composition';
 
   const columns = [
     {
@@ -83,6 +90,17 @@ export default function Ledger() {
 
   return (
     <Box>
+      {isComposition && (
+        <Alert severity="warning" sx={{ mb: 3, '& .MuiAlert-message': { width: '100%' } }}>
+          <Typography fontWeight={700}>🏪 Composition Scheme — ITC Not Claimable</Typography>
+          <Typography variant="body2" sx={{ mt: 0.5 }}>
+            <strong>{business.name}</strong> is registered under the <strong>Composition Scheme</strong>.
+            Composition dealers <strong>cannot claim Input Tax Credit</strong> on purchases.
+            They pay a flat rate on turnover and issue Bill of Supply (not Tax Invoices).
+            This ledger shows your outward tax liability only.
+          </Typography>
+        </Alert>
+      )}
       <ExplainerCallout title="Input Tax Credit (ITC) Ledger">
         ITC is how GST paid on purchases offsets GST collected on sales.
         <strong> Matched</strong> = seller filed GSTR-1, your claim is confirmed.

@@ -12,6 +12,7 @@ import {
 import { createBusiness } from '../api/client.js';
 import { useAppStore } from '../store/useAppStore.js';
 import ExplainerCallout from '../components/ExplainerCallout.jsx';
+import useProgressStore from '../store/useProgressStore.js';
 
 const STATES = [
   'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh',
@@ -32,6 +33,7 @@ export default function RegisterBusiness() {
   const setBusiness = useAppStore((s) => s.setBusiness);
   const sessionId = useAppStore((s) => s.sessionId);
   const isAuthenticated = useAppStore((s) => s.isAuthenticated);
+  const { markModule } = useProgressStore();
 
   const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
@@ -43,6 +45,7 @@ export default function RegisterBusiness() {
       const res = await createBusiness({ ...form, session_id: sessionId });
       setResult(res);
       setBusiness(res.business);
+      markModule('registeredBusiness');
     } catch (err) {
       setError(err.message);
     } finally {

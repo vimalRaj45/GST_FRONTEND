@@ -11,11 +11,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getFilingPreview, filePeriod } from '../api/client.js';
 import { useAppStore } from '../store/useAppStore.js';
 import ExplainerCallout from '../components/ExplainerCallout.jsx';
+import useProgressStore from '../store/useProgressStore.js';
 
 export default function FilingReview() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { business } = useAppStore();
+  const { markModule } = useProgressStore();
   const [step, setStep] = useState(0);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -33,7 +35,7 @@ export default function FilingReview() {
     try {
       const res = await filePeriod(id, business.id);
       if (res.alreadyFiled) { setError('This period was already filed.'); setResult(res); }
-      else { setResult(res); setStep(3); }
+      else { setResult(res); setStep(3); markModule('filedReturn'); }
     } catch (err) {
       setError(err.message);
     } finally {
