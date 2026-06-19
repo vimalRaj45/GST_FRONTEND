@@ -157,7 +157,7 @@ export default function AdminDashboard() {
       {/* TAB 0: Dashboard */}
       {tabIndex === 0 && (
         <Grid container spacing={3}>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <Card sx={{ bgcolor: 'rgba(26,60,110,0.05)', border: '1px solid rgba(26,60,110,0.2)' }}>
               <CardContent sx={{ textAlign: 'center' }}>
                 <Typography variant="h3" color="primary.main" fontWeight={800}>{stats.students}</Typography>
@@ -165,7 +165,7 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <Card sx={{ bgcolor: 'rgba(46,125,50,0.05)', border: '1px solid rgba(46,125,50,0.2)' }}>
               <CardContent sx={{ textAlign: 'center' }}>
                 <Typography variant="h3" color="success.main" fontWeight={800}>{stats.businesses}</Typography>
@@ -173,7 +173,7 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <Card sx={{ bgcolor: 'rgba(237,108,2,0.05)', border: '1px solid rgba(237,108,2,0.2)' }}>
               <CardContent sx={{ textAlign: 'center' }}>
                 <Typography variant="h3" color="warning.main" fontWeight={800}>{stats.invoices}</Typography>

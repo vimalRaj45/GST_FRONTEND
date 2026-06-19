@@ -112,7 +112,7 @@ export default function Home() {
         {/* Feature badges */}
         <Grid container spacing={1.5} sx={{ mt: 1 }}>
           {features.map(({ icon, text }) => (
-            <Grid item xs={12} sm={6} key={text}>
+            <Grid size={{ xs: 12, sm: 6 }} key={text}>
               <Stack direction="row" alignItems="center" spacing={1.5}
                 sx={{ bgcolor: 'rgba(255,255,255,0.12)', borderRadius: 10, px: 2, py: 1.25, height: '100%' }}>
                 <Box sx={{ opacity: 0.85, display: 'flex', alignItems: 'center' }}>{icon}</Box>
@@ -128,7 +128,7 @@ export default function Home() {
         <Typography variant="h3" sx={{ mb: 3, fontSize: { xs: '1.5rem', md: '2rem' }, textAlign: 'center' }}>Key GST Concepts</Typography>
         <Grid container spacing={{ xs: 2, md: 3 }}>
           {concepts.map((c) => (
-            <Grid item xs={12} sm={6} key={c.title}>
+            <Grid size={{ xs: 12, sm: 6 }} key={c.title}>
               <Card sx={{ height: '100%', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', '&:hover': { transform: 'translateY(-8px)', boxShadow: '0 20px 40px rgba(15,23,42,0.08)', borderColor: 'primary.light' } }}>
                 <CardContent sx={{ p: { xs: 3, md: 4 } }}>
                   <Box sx={{ mb: 2, p: 1.5, display: 'inline-flex', borderRadius: 2, bgcolor: 'background.default' }}>{c.icon}</Box>
@@ -180,7 +180,7 @@ export default function Home() {
             { label: 'Tax Periods', icon: <BsCalendarCheck size={22}/>, path: '/periods', color: 'primary' },
             { label: 'GST Quiz', icon: <BsPatchQuestion size={22}/>, path: '/quiz', color: 'secondary' },
           ].map((item) => (
-            <Grid item xs={12} sm={6} md={3} key={item.label}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={item.label}>
               <Button
                 fullWidth variant="outlined" color={item.color} size="large"
                 startIcon={item.icon}

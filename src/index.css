@@ -105,3 +105,41 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+/* Print styles for computerized invoice format */
+@media print {
+  .no-print,
+  header,
+  footer,
+  .MuiAppBar-root,
+  .MuiDrawer-root,
+  button,
+  .MuiButton-root,
+  #tutor-widget-container,
+  .tutor-widget-fab,
+  .tutor-widget-drawer {
+    display: none !important;
+  }
+
+  body, html, #root, main, .MuiBox-root {
+    background: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  .MuiCard-root {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+}

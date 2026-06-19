@@ -17,7 +17,7 @@ export default function Periods() {
   const navigate = useNavigate();
   const muiTheme = useTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('sm'));
-  const { business, isTourActive, tourStep } = useAppStore();
+  const { business } = useAppStore();
   const [periods, setPeriods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -48,49 +48,6 @@ export default function Periods() {
       setClosingId(null);
     }
   };
-
-  // Auto-Pilot Logic - Robust Polling Mechanism
-  useEffect(() => {
-    if (!isTourActive || tourStep !== 4) return;
-    
-    const interval = setInterval(() => {
-      // Check for errors
-      if (error || snack.severity === 'error') {
-        clearInterval(interval);
-        return;
-      }
-      
-      // We need periods to be loaded
-      if (!periods || periods.length === 0) return;
-      
-      const closedPeriod = periods.find(p => p.status === 'closed');
-      const openPeriod = periods.find(p => p.status === 'open');
-      
-      if (closedPeriod) {
-        // Find the button in the DOM directly
-        const btn = document.getElementById(`file-return-btn-${closedPeriod.id}`);
-        if (btn && !btn.disabled) {
-          clearInterval(interval); // Stop polling once we click
-          btn.click();
-        } else if (!btn) {
-          // Fallback if button is missing from DOM for some reason
-          clearInterval(interval);
-          navigate(`/periods/${closedPeriod.id}/file`);
-        }
-      } else if (openPeriod && !closingId) {
-        const btn = document.getElementById(`close-period-btn-${openPeriod.id}`);
-        if (btn && !btn.disabled) {
-          // We don't clear interval here because we want it to keep polling
-          // so it can catch the 'closed' state after this finishes!
-          btn.click();
-        } else if (!btn) {
-          handleClose(openPeriod);
-        }
-      }
-    }, 1500); // Poll every 1.5s
-    
-    return () => clearInterval(interval);
-  }, [isTourActive, tourStep, periods, closingId, error, snack.severity, navigate]);
 
   if (!business) return <Alert severity="warning">Please register a business first.</Alert>;
 
@@ -130,14 +87,14 @@ export default function Periods() {
               {p.net_payable != null && <Typography variant="caption" display="block">Net Payable: <strong>₹{Number(p.net_payable).toFixed(2)}</strong></Typography>}
               <Box sx={{ mt: 1.5 }}>
                 {p.status === 'open' && (
-                  <Button id={`close-period-btn-${p.id}`} fullWidth variant="contained" color="warning" size="small"
+                  <Button fullWidth variant="contained" color="warning" size="small"
                     startIcon={closingId === p.id ? <CircularProgress size={14} color="inherit" /> : <BsLock size={14} />}
                     disabled={closingId === p.id} onClick={() => handleClose(p)}>
                     {closingId === p.id ? 'Closing...' : 'Close Period'}
                   </Button>
                 )}
                 {p.status === 'closed' && (
-                  <Button id={`file-return-btn-${p.id}`} fullWidth variant="contained" color="success" size="small"
+                  <Button fullWidth variant="contained" color="success" size="small"
                     startIcon={<BsFileEarmarkText size={14} />}
                     onClick={() => navigate(`/periods/${p.id}/file`)}>
                     File Return
@@ -192,14 +149,14 @@ export default function Periods() {
                     <TableCell>
                       <Stack direction="row" spacing={1}>
                         {p.status === 'open' && (
-                          <Button id={`close-period-btn-${p.id}`} size="small" variant="contained" color="warning"
+                          <Button size="small" variant="contained" color="warning"
                             startIcon={closingId === p.id ? <CircularProgress size={12} color="inherit" /> : <BsLock size={13} />}
                             disabled={closingId === p.id} onClick={() => handleClose(p)}>
                             {closingId === p.id ? 'Closing...' : 'Close'}
                           </Button>
                         )}
                         {p.status === 'closed' && (
-                          <Button id={`file-return-btn-${p.id}`} size="small" variant="contained" color="success"
+                          <Button size="small" variant="contained" color="success"
                             startIcon={<BsFileEarmarkText size={13} />}
                             onClick={() => navigate(`/periods/${p.id}/file`)}>
                             File Return

@@ -78,7 +78,7 @@ export default function HowToUse() {
 
       {/* Explainer / Disclaimer */}
       <Grid container spacing={3} sx={{ mb: 5 }}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Box sx={{ p: 3, bgcolor: '#e8f5e9', border: '1px solid #c8e6c9', borderRadius: 3, height: '100%' }}>
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1.5 }}>
               <BsShieldCheck size={22} color="#2e7d32" />
@@ -89,7 +89,7 @@ export default function HowToUse() {
             </Typography>
           </Box>
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Box sx={{ p: 3, bgcolor: '#e3f2fd', border: '1px solid #bbdefb', borderRadius: 3, height: '100%' }}>
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1.5 }}>
               <BsRobot size={22} color="#1565c0" />

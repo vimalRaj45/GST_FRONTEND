@@ -46,7 +46,7 @@ function calcItemTax(item, isInterstate) {
 
 export default function InvoiceNew() {
   const navigate = useNavigate();
-  const { business, sessionId, isTourActive, tourStep, nextTourStep } = useAppStore();
+  const { business, sessionId } = useAppStore();
   const [step, setStep] = useState(0);
   const [header, setHeader] = useState({ buyer_business_id: '', invoice_type: 'tax_invoice', transaction_type: 'regular', tax_period_id: '', notes: '' });
   const [items, setItems] = useState([defaultItem()]);
@@ -68,35 +68,6 @@ export default function InvoiceNew() {
       }).catch(() => {});
     }
   }, [business?.id, sessionId]);
-
-  // Auto-Pilot Logic
-  useEffect(() => {
-    if (isTourActive && tourStep === 2) {
-      if (step === 0 && header.tax_period_id) {
-        const timer = setTimeout(() => setStep(1), 2000);
-        return () => clearTimeout(timer);
-      } else if (step === 1) {
-        const timer1 = setTimeout(() => {
-           setItems(prev => [{ ...prev[0], item_name: 'High-end Laptop', unit_price: 55000, tax_rate: 18 }]);
-        }, 1000);
-        const timer2 = setTimeout(() => setStep(2), 3000);
-        return () => { clearTimeout(timer1); clearTimeout(timer2); };
-      } else if (step === 2 && !submitting && !createdInvoice) {
-        const timer = setTimeout(() => {
-          document.getElementById('auto-submit-btn')?.click();
-        }, 2000);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [isTourActive, tourStep, step, header.tax_period_id, submitting, createdInvoice]);
-
-  // Handle tour progression on success
-  useEffect(() => {
-    if (isTourActive && tourStep === 2 && createdInvoice) {
-      const timer = setTimeout(() => nextTourStep(), 2500);
-      return () => clearTimeout(timer);
-    }
-  }, [createdInvoice, isTourActive, tourStep, nextTourStep]);
 
   const selectedBuyer = buyers.find((b) => b.id === header.buyer_business_id);
   const isInterstate = business && selectedBuyer ? business.state_code !== selectedBuyer.state_code : false;
@@ -169,10 +140,10 @@ export default function InvoiceNew() {
           <CardContent sx={{ p: { xs: 2, md: 3 } }}>
             <Typography variant="h5" fontWeight={700} sx={{ mb: 3 }}>Invoice Header</Typography>
             <Grid container spacing={2.5}>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField label="Seller (You)" value={business.name} fullWidth disabled />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField select label="Buyer Business" value={header.buyer_business_id}
                   onChange={(e) => setHeader((h) => ({ ...h, buyer_business_id: e.target.value }))} fullWidth>
                   <MenuItem value="">— B2C / No specific buyer —</MenuItem>
@@ -181,19 +152,19 @@ export default function InvoiceNew() {
                   ))}
                 </TextField>
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField select label="Invoice Type" value={header.invoice_type}
                   onChange={(e) => setHeader((h) => ({ ...h, invoice_type: e.target.value }))} fullWidth>
                   {INVOICE_TYPES.map((t) => <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>)}
                 </TextField>
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField select label="Transaction Type" value={header.transaction_type}
                   onChange={(e) => setHeader((h) => ({ ...h, transaction_type: e.target.value }))} fullWidth>
                   {TX_TYPES.map((t) => <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>)}
                 </TextField>
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField select label="Tax Period" value={header.tax_period_id}
                   onChange={(e) => setHeader((h) => ({ ...h, tax_period_id: e.target.value }))} required fullWidth>
                   {periods.filter((p) => p.status === 'open').map((p) => (
@@ -202,13 +173,13 @@ export default function InvoiceNew() {
                 </TextField>
               </Grid>
               {isInterstate && (
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Alert severity="info" icon={<BsGlobe />}>
                     <strong>Inter-State</strong> — IGST applies (seller: {business.state}, buyer: {selectedBuyer?.state})
                   </Alert>
                 </Grid>
               )}
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <TextField label="Notes (optional)" value={header.notes} multiline rows={2}
                   onChange={(e) => setHeader((h) => ({ ...h, notes: e.target.value }))} fullWidth />
               </Grid>
@@ -245,11 +216,11 @@ export default function InvoiceNew() {
                         )}
                       </Stack>
                       <Grid container spacing={1.5}>
-                        <Grid item xs={12} sm={6}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
                           <TextField label="Item Name" value={item.item_name} fullWidth size="small" required
                             onChange={(e) => updateItem(item._key, 'item_name', e.target.value)} />
                         </Grid>
-                        <Grid item xs={12} sm={6}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
                           <Autocomplete
                             options={hsnOptions} getOptionLabel={(o) => `${o.code} — ${o.description}`}
                             loading={hsnLoading}
@@ -261,15 +232,15 @@ export default function InvoiceNew() {
                             )}
                           />
                         </Grid>
-                        <Grid item xs={4} sm={3}>
+                        <Grid size={{ xs: 4, sm: 3 }}>
                           <TextField label="Qty" type="number" size="small" value={item.qty} fullWidth
                             onChange={(e) => updateItem(item._key, 'qty', e.target.value)} />
                         </Grid>
-                        <Grid item xs={4} sm={5}>
+                        <Grid size={{ xs: 4, sm: 5 }}>
                           <TextField label="Unit Price (₹)" type="number" size="small" value={item.unit_price} fullWidth
                             onChange={(e) => updateItem(item._key, 'unit_price', e.target.value)} />
                         </Grid>
-                        <Grid item xs={4} sm={4}>
+                        <Grid size={{ xs: 4, sm: 4 }}>
                           <TextField select label="Rate" value={item.tax_rate} size="small" fullWidth
                             onChange={(e) => updateItem(item._key, 'tax_rate', Number(e.target.value))}>
                             {TAX_RATES.map((r) => <MenuItem key={r} value={r}>{r}%</MenuItem>)}
@@ -305,10 +276,10 @@ export default function InvoiceNew() {
           <CardContent sx={{ p: { xs: 2, md: 3 } }}>
             <Typography variant="h5" fontWeight={700} sx={{ mb: 3 }}>Review Invoice</Typography>
             <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={6}><Typography color="text.secondary" fontSize="0.8rem">Seller</Typography><Typography fontWeight={600}>{business.name}</Typography></Grid>
-              <Grid item xs={6}><Typography color="text.secondary" fontSize="0.8rem">Buyer</Typography><Typography fontWeight={600}>{selectedBuyer?.name || 'B2C'}</Typography></Grid>
-              <Grid item xs={6}><Typography color="text.secondary" fontSize="0.8rem">Type</Typography><StatusChip status={header.invoice_type} /></Grid>
-              <Grid item xs={6}>
+              <Grid size={6}><Typography color="text.secondary" fontSize="0.8rem">Seller</Typography><Typography fontWeight={600}>{business.name}</Typography></Grid>
+              <Grid size={6}><Typography color="text.secondary" fontSize="0.8rem">Buyer</Typography><Typography fontWeight={600}>{selectedBuyer?.name || 'B2C'}</Typography></Grid>
+              <Grid size={6}><Typography color="text.secondary" fontSize="0.8rem">Type</Typography><StatusChip status={header.invoice_type} /></Grid>
+              <Grid size={6}>
                 <Typography color="text.secondary" fontSize="0.8rem">Tax Mode</Typography>
                 <Stack direction="row" alignItems="center" spacing={0.5}>
                   {isInterstate ? <BsGlobe size={14} color="#0288d1" /> : <BsGeoAlt size={14} color="#1a3c6e" />}
@@ -358,7 +329,6 @@ export default function InvoiceNew() {
             <Stack direction="row" justifyContent="space-between" sx={{ mt: 3 }}>
               <Button startIcon={<BsArrowLeft />} onClick={() => setStep(1)}>Back</Button>
               <Button variant="contained" color="success" onClick={handleSubmit}
-                id="auto-submit-btn"
                 disabled={submitting}
                 startIcon={submitting ? <CircularProgress size={16} color="inherit" /> : <BsCheckCircle size={16} />}>
                 {submitting ? 'Creating...' : 'Create Invoice'}

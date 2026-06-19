@@ -92,7 +92,7 @@ export default function Calculator() {
 
       <Grid container spacing={{ xs: 2, md: 3 }}>
         {/* Input Panel */}
-        <Grid item xs={12} md={5}>
+        <Grid size={{ xs: 12, md: 5 }}>
           <Card sx={{ height: '100%' }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
@@ -160,7 +160,7 @@ export default function Calculator() {
         </Grid>
 
         {/* Output Panel */}
-        <Grid item xs={12} md={7}>
+        <Grid size={{ xs: 12, md: 7 }}>
           <Card sx={{ height: '100%' }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
@@ -171,17 +171,17 @@ export default function Calculator() {
               </Stack>
 
               <Grid container spacing={{ xs: 1.5, md: 2 }} sx={{ mb: 2.5 }}>
-                <Grid item xs={6}><TaxCard label="Taxable Value" value={form.amount} color="#444" /></Grid>
-                <Grid item xs={6}><TaxCard label="IGST (Inter-state)" value={display.igst} color="#0288d1" /></Grid>
-                <Grid item xs={6}><TaxCard label="CGST (Central)" value={display.cgst} color="#1a3c6e" /></Grid>
-                <Grid item xs={6}><TaxCard label="SGST (State)" value={display.sgst} color="#2d5fa0" /></Grid>
+                <Grid size={6}><TaxCard label="Taxable Value" value={form.amount} color="#444" /></Grid>
+                <Grid size={6}><TaxCard label="IGST (Inter-state)" value={display.igst} color="#0288d1" /></Grid>
+                <Grid size={6}><TaxCard label="CGST (Central)" value={display.cgst} color="#1a3c6e" /></Grid>
+                <Grid size={6}><TaxCard label="SGST (State)" value={display.sgst} color="#2d5fa0" /></Grid>
               </Grid>
 
               <Divider sx={{ mb: 2 }} />
 
               <Grid container spacing={{ xs: 1.5, md: 2 }}>
-                <Grid item xs={6}><TaxCard label="Total Tax" value={display.totalTax} color="#e07b00" /></Grid>
-                <Grid item xs={6}><TaxCard label="Invoice Total" value={display.totalValue} highlight /></Grid>
+                <Grid size={6}><TaxCard label="Total Tax" value={display.totalTax} color="#e07b00" /></Grid>
+                <Grid size={6}><TaxCard label="Invoice Total" value={display.totalValue} highlight /></Grid>
               </Grid>
 
               {/* Contextual alerts */}

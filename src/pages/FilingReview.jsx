@@ -15,7 +15,7 @@ import ExplainerCallout from '../components/ExplainerCallout.jsx';
 export default function FilingReview() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { business, isTourActive, tourStep, nextTourStep } = useAppStore();
+  const { business } = useAppStore();
   const [step, setStep] = useState(0);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -27,40 +27,6 @@ export default function FilingReview() {
     if (!business?.id) return;
     getFilingPreview(id, business.id).then(setPreview).catch((e) => setError(e.message)).finally(() => setLoading(false));
   }, [id, business?.id]);
-
-  // Auto-Pilot Logic - Robust Polling Mechanism
-  useEffect(() => {
-    if (!isTourActive || tourStep !== 4) return;
-    
-    const interval = setInterval(() => {
-      if (error) {
-        clearInterval(interval);
-        return;
-      }
-      
-      if (step === 0 && preview) {
-        setStep(1);
-      } else if (step === 1) {
-        setStep(2);
-      } else if (step === 2 && !filing && !result) {
-        const btn = document.getElementById('auto-file-btn');
-        if (btn && !btn.disabled) {
-          clearInterval(interval);
-          btn.click();
-        }
-      }
-    }, 1500); // Poll every 1.5s
-    
-    return () => clearInterval(interval);
-  }, [isTourActive, tourStep, step, preview, filing, result, error]);
-
-  // Handle tour progression on success
-  useEffect(() => {
-    if (isTourActive && tourStep === 4 && result) {
-      const timer = setTimeout(() => nextTourStep(), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [result, isTourActive, tourStep, nextTourStep]);
 
   const handleFile = async () => {
     setFiling(true); setError(null);
@@ -226,7 +192,6 @@ export default function FilingReview() {
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center">
               <Button variant="outlined" startIcon={<BsArrowLeft />} onClick={() => setStep(1)}>Back</Button>
               <Button
-                id="auto-file-btn"
                 variant="contained" color="success" size="large"
                 disabled={filing}
                 startIcon={filing ? <CircularProgress size={18} color="inherit" /> : <BsCheckCircle size={18} />}

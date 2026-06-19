@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Box, Typography, Card, CardContent, Grid, Divider, Table, TableBody,
   TableCell, TableHead, TableRow, Chip, CircularProgress, Alert, Button, Stack
 } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
-import { BsPrinter, BsArrowLeft, BsGlobe, BsGeoAlt } from 'react-icons/bs';
+import { BsPrinter, BsArrowLeft, BsGlobe, BsGeoAlt, BsDownload } from 'react-icons/bs';
 import { getInvoice } from '../api/client.js';
 import StatusChip from '../components/StatusChip.jsx';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 const LOGO_URL = 'https://aadhirasolutions-hacakthon.onrender.com/logo.png';
 
@@ -16,10 +18,52 @@ export default function InvoiceView() {
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const printableRef = useRef(null);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     getInvoice(id).then(setInvoice).catch((e) => setError(e.message)).finally(() => setLoading(false));
   }, [id]);
+
+  const handleDownloadPdf = async () => {
+    if (!printableRef.current) return;
+    setDownloading(true);
+    try {
+      const element = printableRef.current;
+      
+      const canvas = await html2canvas(element, {
+        scale: 2.5,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+        heightLeft -= pageHeight;
+      }
+      
+      pdf.save(`Invoice_${invoice.invoice_number || 'Simulated'}.pdf`);
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}><CircularProgress /></Box>;
   if (error) return <Alert severity="error">{error}</Alert>;
@@ -36,10 +80,21 @@ export default function InvoiceView() {
       {/* Action bar — hidden on print */}
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2, '@media print': { display: 'none' } }}>
         <Button startIcon={<BsArrowLeft size={16} />} onClick={() => navigate(-1)}>Back</Button>
-        <Button variant="outlined" startIcon={<BsPrinter size={16} />} onClick={() => window.print()}>Print Invoice</Button>
+        <Stack direction="row" spacing={1.5}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={downloading ? <CircularProgress size={16} color="inherit" /> : <BsDownload size={16} />}
+            onClick={handleDownloadPdf}
+            disabled={downloading}
+          >
+            {downloading ? 'Downloading...' : 'Download PDF'}
+          </Button>
+          <Button variant="outlined" startIcon={<BsPrinter size={16} />} onClick={() => window.print()}>Print Invoice</Button>
+        </Stack>
       </Stack>
 
-      <Card sx={{ border: '2px solid', borderColor: 'primary.main', '@media print': { boxShadow: 'none', border: '1px solid #ccc' } }}>
+      <Card ref={printableRef} sx={{ border: '2px solid', borderColor: 'primary.main', '@media print': { boxShadow: 'none', border: '1px solid #ccc' } }}>
         {/* Invoice Header */}
         <Box sx={{ background: 'linear-gradient(135deg,#1a3c6e,#2d5fa0)', color: 'white', p: { xs: 2.5, md: 3.5 } }}>
           <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'flex-start' }} spacing={2}>
@@ -74,7 +129,7 @@ export default function InvoiceView() {
               { role: 'From (Seller)', name: invoice.seller_name, gstin: invoice.seller_gstin, state: invoice.seller_state },
               { role: 'To (Buyer)', name: invoice.buyer_name || 'B2C Customer', gstin: invoice.buyer_gstin, state: invoice.buyer_state },
             ].map(({ role, name, gstin, state }) => (
-              <Grid item xs={12} sm={6} key={role}>
+              <Grid size={{ xs: 12, sm: 6 }} key={role}>
                 <Typography variant="overline" color="text.secondary" fontWeight={700} fontSize="0.65rem" letterSpacing={1}>{role}</Typography>
                 <Typography variant="h6" fontWeight={700} fontSize={{ xs: '0.95rem', md: '1.1rem' }}>{name}</Typography>
                 {gstin && <Typography variant="body2" color="text.secondary" fontSize="0.8rem">GSTIN: {gstin}</Typography>}
@@ -155,9 +210,68 @@ export default function InvoiceView() {
 
           {invoice.notes && <Alert severity="info" sx={{ mt: 2, fontSize: '0.82rem' }}>Notes: {invoice.notes}</Alert>}
 
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 3, textAlign: 'center', fontStyle: 'italic' }}>
-            ⚠️ This is a simulated invoice for educational purposes only. Not a legal or tax document.
-          </Typography>
+          <Divider sx={{ my: 3 }} />
+
+          <Grid container spacing={3} sx={{ mt: 0.5 }}>
+            {/* Bank Details & Terms */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Typography variant="subtitle2" fontWeight={700} color="text.secondary" sx={{ mb: 1, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: 0.5 }}>
+                Bank Account Details (For Payment)
+              </Typography>
+              <Box sx={{ p: 1.5, bgcolor: 'background.default', borderRadius: 1, border: '1px dashed', borderColor: 'divider', mb: 2 }}>
+                <Grid container spacing={1} sx={{ '& .MuiTypography-root': { fontSize: '0.78rem' } }}>
+                  <Grid size={4.5}><Typography color="text.secondary">Bank Name:</Typography></Grid>
+                  <Grid size={7.5}><Typography fontWeight={600}>State Bank of India</Typography></Grid>
+                  <Grid size={4.5}><Typography color="text.secondary">Account Number:</Typography></Grid>
+                  <Grid size={7.5}><Typography fontWeight={600} fontFamily="monospace">33020199485</Typography></Grid>
+                  <Grid size={4.5}><Typography color="text.secondary">IFSC Code:</Typography></Grid>
+                  <Grid size={7.5}><Typography fontWeight={600} fontFamily="monospace">SBIN0000324</Typography></Grid>
+                  <Grid size={4.5}><Typography color="text.secondary">Branch:</Typography></Grid>
+                  <Grid size={7.5}><Typography>Mumbai Main Branch</Typography></Grid>
+                </Grid>
+              </Box>
+
+              <Typography variant="subtitle2" fontWeight={700} color="text.secondary" sx={{ mb: 0.5, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: 0.5 }}>
+                Terms & Conditions
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.4, fontSize: '0.72rem' }}>
+                1. Goods once sold will not be taken back or exchanged.<br />
+                2. Interest @ 18% p.a. will be charged if payment is not received within 15 days.<br />
+                3. All disputes are subject to the jurisdiction of local courts where seller is registered.
+              </Typography>
+            </Grid>
+
+            {/* Declaration & Signature */}
+            <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <Box>
+                <Typography variant="subtitle2" fontWeight={700} color="text.secondary" sx={{ mb: 0.5, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: 0.5 }}>
+                  Declaration
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontStyle: 'italic', lineHeight: 1.4, fontSize: '0.72rem' }}>
+                  We declare that this invoice shows the actual price of the goods/services described and that all particulars are true and correct.
+                </Typography>
+              </Box>
+
+              <Box sx={{ mt: 4, textAlign: 'right' }}>
+                <Typography variant="body2" fontWeight={700} sx={{ mb: 4, fontSize: '0.85rem' }}>
+                  For {invoice.seller_name}
+                </Typography>
+                <Divider sx={{ width: 180, ml: 'auto', mb: 0.5 }} />
+                <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ mr: 1, fontSize: '0.72rem' }}>
+                  Authorized Signatory
+                </Typography>
+              </Box>
+            </Grid>
+          </Grid>
+
+          <Box sx={{ mt: 4, pt: 2, borderTop: '1px solid', borderColor: 'divider', textAlign: 'center' }}>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 700, fontSize: '0.78rem' }}>
+              💻 This is a computer-generated invoice and does not require a physical signature.
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, fontStyle: 'italic', fontSize: '0.7rem' }}>
+              ⚠️ Simulated for GST educational sandbox purposes only. Not a legal financial document.
+            </Typography>
+          </Box>
         </CardContent>
       </Card>
     </Box>

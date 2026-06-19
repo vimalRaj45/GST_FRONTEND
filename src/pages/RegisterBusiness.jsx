@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box, Typography, TextField, MenuItem, FormControl, FormLabel,
   RadioGroup, FormControlLabel, Radio, Button, Card, CardContent,
@@ -32,37 +32,8 @@ export default function RegisterBusiness() {
   const setBusiness = useAppStore((s) => s.setBusiness);
   const sessionId = useAppStore((s) => s.sessionId);
   const isAuthenticated = useAppStore((s) => s.isAuthenticated);
-  const { isTourActive, tourStep, nextTourStep } = useAppStore();
 
   const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
-
-  // Auto-Pilot Logic
-  useEffect(() => {
-    if (isTourActive && tourStep === 1) {
-      const typeText = "DemoCorp Solutions";
-      let i = 0;
-      const interval = setInterval(() => {
-        setForm(f => ({ ...f, name: typeText.substring(0, i + 1) }));
-        i++;
-        if (i >= typeText.length) {
-          clearInterval(interval);
-          setTimeout(() => {
-            document.getElementById('register-submit-btn').click();
-          }, 1000);
-        }
-      }, 100);
-      return () => clearInterval(interval);
-    }
-  }, [isTourActive, tourStep]);
-
-  // Handle tour progression on success
-  useEffect(() => {
-    if (isTourActive && tourStep === 1 && result) {
-      setTimeout(() => {
-        nextTourStep();
-      }, 2000);
-    }
-  }, [result, isTourActive, tourStep, nextTourStep]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -217,7 +188,6 @@ export default function RegisterBusiness() {
               </Alert>
 
               <Button
-                id="register-submit-btn"
                 type="submit" variant="contained" size="large"
                 disabled={loading || !form.name || !form.state}
                 startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <BsBuilding size={18} />}
