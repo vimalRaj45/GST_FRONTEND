@@ -53,18 +53,18 @@ export default function Periods() {
   useEffect(() => {
     if (error || snack.severity === 'error') return; // Stop on error
     if (isTourActive && tourStep === 4 && periods.length > 0) {
-      const openPeriod = periods.find(p => p.status === 'open');
       const closedPeriod = periods.find(p => p.status === 'closed');
+      const openPeriod = periods.find(p => p.status === 'open');
       
-      if (openPeriod && !closingId) {
-        const timer = setTimeout(() => handleClose(openPeriod), 2000);
-        return () => clearTimeout(timer);
-      } else if (closedPeriod) {
+      if (closedPeriod) {
         const timer = setTimeout(() => navigate(`/periods/${closedPeriod.id}/file`), 2000);
+        return () => clearTimeout(timer);
+      } else if (openPeriod && !closingId) {
+        const timer = setTimeout(() => handleClose(openPeriod), 2000);
         return () => clearTimeout(timer);
       }
     }
-  }, [isTourActive, tourStep, periods, closingId, navigate]);
+  }, [isTourActive, tourStep, periods, closingId, navigate, error, snack.severity]);
 
   if (!business) return <Alert severity="warning">Please register a business first.</Alert>;
 
