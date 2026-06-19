@@ -40,9 +40,20 @@ export const calculateGST = (data) => client.post('/api/calculate-gst', data);
 
 // --- Admin Endpoints ---
 
+export const getAdminStats = () => client.get('/api/admin/stats');
 export const getStudents = () => client.get('/api/admin/students');
-
+export const getAllBusinesses = () => client.get('/api/admin/businesses');
 export const createBusinessForStudent = (data) => client.post('/api/admin/businesses', data);
+
+export const getAdminTaxSlabs = () => client.get('/api/admin/tax-slabs');
+export const createTaxSlab = (data) => client.post('/api/admin/tax-slabs', data);
+export const updateTaxSlab = (id, data) => client.put(`/api/admin/tax-slabs/${id}`, data);
+export const deleteTaxSlab = (id) => client.delete(`/api/admin/tax-slabs/${id}`);
+
+export const getAdminHsnCodes = (search = '') => client.get(`/api/admin/hsn-codes?search=${encodeURIComponent(search)}`);
+export const createHsnCode = (data) => client.post('/api/admin/hsn-codes', data);
+export const updateHsnCode = (id, data) => client.put(`/api/admin/hsn-codes/${id}`, data);
+export const deleteHsnCode = (id) => client.delete(`/api/admin/hsn-codes/${id}`);
 
 export const createBusiness = (data) => client.post('/api/businesses', data);
 export const getBusiness = (id) => client.get(`/api/businesses/${id}`);
