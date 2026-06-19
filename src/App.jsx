@@ -96,7 +96,7 @@ function Layout({ children }) {
 
           {/* Desktop Nav Links */}
           {!isMobile && (
-            <Box sx={{ display: 'flex', gap: 1 }}>
+            <Box sx={{ display: 'flex', gap: 1, ml: 'auto', mr: 3 }}>
               {NAV_ITEMS.map((item) => {
                 const Icon = item.icon;
                 const active = activeRoute(item.path);
@@ -122,7 +122,7 @@ function Layout({ children }) {
 
           {/* Auth & Active Business Badge */}
           {isAuthenticated ? (
-            <Stack direction="row" alignItems="center" spacing={1.5} sx={{ ml: 'auto' }}>
+            <Stack direction="row" alignItems="center" spacing={1.5} sx={{ ml: { xs: 'auto', md: 0 } }}>
               {!isMobile && (
                 <Stack direction="row" alignItems="center" spacing={1}>
                   <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: '0.9rem' }}>
@@ -171,7 +171,7 @@ function Layout({ children }) {
               </Button>
             </Stack>
           ) : (
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ ml: 'auto' }}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ ml: { xs: 'auto', md: 0 } }}>
               <Button size="small" onClick={() => navigate('/login')} sx={{ fontWeight: 600 }}>Login</Button>
               <Button variant="contained" size="small" onClick={() => navigate('/register')} sx={{ fontWeight: 600, boxShadow: 'none' }}>Sign Up</Button>
             </Stack>
