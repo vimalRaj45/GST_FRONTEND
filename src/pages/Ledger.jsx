@@ -12,7 +12,7 @@ import ExplainerCallout from '../components/ExplainerCallout.jsx';
 import StatusChip from '../components/StatusChip.jsx';
 
 export default function Ledger() {
-  const { business } = useAppStore();
+  const { business, isTourActive, tourStep, nextTourStep } = useAppStore();
   const [periods, setPeriods] = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [summary, setSummary] = useState(null);
@@ -45,6 +45,14 @@ export default function Ledger() {
     catch (err) { setExplanation(`Error: ${err.message}`); }
     finally { setExplaining(false); }
   }, []);
+
+  // Auto-Pilot Logic
+  useEffect(() => {
+    if (isTourActive && tourStep === 3) {
+      const timer = setTimeout(() => nextTourStep(), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isTourActive, tourStep, nextTourStep]);
 
   if (!business) return <Alert severity="warning" action={<Button href="/register">Register</Button>}>Please register a business first.</Alert>;
 

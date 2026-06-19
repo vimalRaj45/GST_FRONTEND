@@ -49,7 +49,7 @@ function Layout({ children }) {
   const navigate = useNavigate();
   const muiTheme = useTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
-  const { business, isAuthenticated, user, logout, setBusiness } = useAppStore();
+  const { business, isAuthenticated, user, logout, setBusiness, startTour } = useAppStore();
 
   const activeRoute = (path) => {
     if (path === '/' && location.pathname !== '/') return false;
@@ -93,6 +93,26 @@ function Layout({ children }) {
               sx={{ height: 40, width: 40, objectFit: 'contain', mixBlendMode: 'multiply' }}
             />
           </Stack>
+
+          {/* Auto-Pilot Button */}
+          {!isMobile && isAuthenticated && (
+            <Button
+              variant="contained"
+              color="secondary"
+              startIcon={<BsPlayCircle />}
+              onClick={startTour}
+              sx={{
+                bgcolor: '#c62828',
+                '&:hover': { bgcolor: '#b71c1c' },
+                borderRadius: 2,
+                fontWeight: 700,
+                textTransform: 'none',
+                boxShadow: '0 4px 14px 0 rgba(198, 40, 40, 0.39)',
+              }}
+            >
+              Auto-Pilot Tour
+            </Button>
+          )}
 
           {/* Desktop Nav Links */}
           {!isMobile && (
@@ -178,6 +198,8 @@ function Layout({ children }) {
           )}
         </Toolbar>
       </AppBar>
+
+      <AutoPilotEngine />
 
       {/* ── Mobile Drawer ── */}
       <Drawer

@@ -75,4 +75,11 @@ export const useAppStore = create((set, get) => ({
       delete upd[key];
       return { optimisticUpdates: upd };
     }),
+
+  // Auto-Pilot Tour State
+  isTourActive: false,
+  tourStep: 0,
+  startTour: () => set({ isTourActive: true, tourStep: 1 }),
+  nextTourStep: () => set((state) => ({ tourStep: state.tourStep + 1 })),
+  endTour: () => set({ isTourActive: false, tourStep: 0 }),
 }));

@@ -46,7 +46,7 @@ function calcItemTax(item, isInterstate) {
 
 export default function InvoiceNew() {
   const navigate = useNavigate();
-  const { business, sessionId } = useAppStore();
+  const { business, sessionId, isTourActive, tourStep, nextTourStep } = useAppStore();
   const [step, setStep] = useState(0);
   const [header, setHeader] = useState({ buyer_business_id: '', invoice_type: 'tax_invoice', transaction_type: 'regular', tax_period_id: '', notes: '' });
   const [items, setItems] = useState([defaultItem()]);
@@ -68,6 +68,35 @@ export default function InvoiceNew() {
       }).catch(() => {});
     }
   }, [business?.id, sessionId]);
+
+  // Auto-Pilot Logic
+  useEffect(() => {
+    if (isTourActive && tourStep === 2) {
+      if (step === 0 && header.tax_period_id) {
+        const timer = setTimeout(() => setStep(1), 2000);
+        return () => clearTimeout(timer);
+      } else if (step === 1) {
+        const timer1 = setTimeout(() => {
+           setItems(prev => [{ ...prev[0], item_name: 'High-end Laptop', unit_price: 55000, tax_rate: 18 }]);
+        }, 1000);
+        const timer2 = setTimeout(() => setStep(2), 3000);
+        return () => { clearTimeout(timer1); clearTimeout(timer2); };
+      } else if (step === 2 && !submitting && !createdInvoice) {
+        const timer = setTimeout(() => {
+          document.getElementById('auto-submit-btn')?.click();
+        }, 2000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isTourActive, tourStep, step, header.tax_period_id, submitting, createdInvoice]);
+
+  // Handle tour progression on success
+  useEffect(() => {
+    if (isTourActive && tourStep === 2 && createdInvoice) {
+      const timer = setTimeout(() => nextTourStep(), 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [createdInvoice, isTourActive, tourStep, nextTourStep]);
 
   const selectedBuyer = buyers.find((b) => b.id === header.buyer_business_id);
   const isInterstate = business && selectedBuyer ? business.state_code !== selectedBuyer.state_code : false;
@@ -329,6 +358,7 @@ export default function InvoiceNew() {
             <Stack direction="row" justifyContent="space-between" sx={{ mt: 3 }}>
               <Button startIcon={<BsArrowLeft />} onClick={() => setStep(1)}>Back</Button>
               <Button variant="contained" color="success" onClick={handleSubmit}
+                id="auto-submit-btn"
                 disabled={submitting}
                 startIcon={submitting ? <CircularProgress size={16} color="inherit" /> : <BsCheckCircle size={16} />}>
                 {submitting ? 'Creating...' : 'Create Invoice'}

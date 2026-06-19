@@ -17,7 +17,7 @@ export default function Periods() {
   const navigate = useNavigate();
   const muiTheme = useTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('sm'));
-  const { business } = useAppStore();
+  const { business, isTourActive, tourStep } = useAppStore();
   const [periods, setPeriods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -48,6 +48,22 @@ export default function Periods() {
       setClosingId(null);
     }
   };
+
+  // Auto-Pilot Logic
+  useEffect(() => {
+    if (isTourActive && tourStep === 4 && periods.length > 0) {
+      const openPeriod = periods.find(p => p.status === 'open');
+      const closedPeriod = periods.find(p => p.status === 'closed');
+      
+      if (openPeriod && !closingId) {
+        const timer = setTimeout(() => handleClose(openPeriod), 2000);
+        return () => clearTimeout(timer);
+      } else if (closedPeriod) {
+        const timer = setTimeout(() => navigate(`/periods/${closedPeriod.id}/file`), 2000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isTourActive, tourStep, periods, closingId, navigate]);
 
   if (!business) return <Alert severity="warning">Please register a business first.</Alert>;
 
