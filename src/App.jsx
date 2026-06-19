@@ -31,6 +31,7 @@ import FilingReview from './pages/FilingReview.jsx';
 import Quiz from './pages/Quiz.jsx';
 import HowToUse from './pages/HowToUse.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
+import AutoPilotEngine from './components/AutoPilotEngine.jsx';
 
 const LOGO_URL = 'https://aadhirasolutions-hacakthon.onrender.com/logo.png';
 
