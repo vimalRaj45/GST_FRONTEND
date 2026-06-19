@@ -81,7 +81,7 @@ function Layout({ children }) {
           {/* Logo + Brand */}
           <Stack
             direction="row" alignItems="center" spacing={1}
-            sx={{ cursor: 'pointer', flexShrink: 0, mr: { xs: 'auto', md: 4 } }}
+            sx={{ cursor: 'pointer', flexShrink: 0, mr: { xs: 'auto', md: 2 } }}
             onClick={() => navigate('/')}
           >
             <Box
@@ -123,9 +123,14 @@ function Layout({ children }) {
           {isAuthenticated ? (
             <Stack direction="row" alignItems="center" spacing={1.5} sx={{ ml: 'auto' }}>
               {!isMobile && (
-                <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                  {user?.name}
-                </Typography>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: '0.9rem' }}>
+                    {user?.name?.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                    {user?.name}
+                  </Typography>
+                </Stack>
               )}
               {business ? (
                 <Tooltip title="Your active simulated business">
