@@ -16,6 +16,28 @@ export const useAppStore = create((set, get) => ({
   sessionId: getOrCreateSessionId(),
   business: null,
   businessId: localStorage.getItem(BUSINESS_KEY) || null,
+  
+  user: null,
+  token: localStorage.getItem('auth_token') || null,
+  isAuthenticated: !!localStorage.getItem('auth_token'),
+
+  setToken: (token) => {
+    if (token) {
+      localStorage.setItem('auth_token', token);
+      set({ token, isAuthenticated: true });
+    } else {
+      localStorage.removeItem('auth_token');
+      set({ token: null, isAuthenticated: false, user: null });
+    }
+  },
+
+  setUser: (user) => set({ user }),
+
+  logout: () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem(BUSINESS_KEY);
+    set({ user: null, token: null, isAuthenticated: false, business: null, businessId: null });
+  },
 
   setBusiness: (business) => {
     set({ business, businessId: business?.id || null });

@@ -18,7 +18,9 @@ import { getBusiness } from './api/client.js';
 import TutorWidget from './components/TutorWidget.jsx';
 
 import Home from './pages/Home.jsx';
-import Register from './pages/Register.jsx';
+import Login from './pages/Login.jsx';
+import RegisterUser from './pages/RegisterUser.jsx';
+import RegisterBusiness from './pages/RegisterBusiness.jsx';
 import Calculator from './pages/Calculator.jsx';
 import InvoiceNew from './pages/InvoiceNew.jsx';
 import InvoiceView from './pages/InvoiceView.jsx';
@@ -31,42 +33,42 @@ import HowToUse from './pages/HowToUse.jsx';
 const LOGO_URL = 'https://aadhirasolutions-hacakthon.onrender.com/logo.png';
 
 const NAV_ITEMS = [
-  { label: 'Home',        path: '/',             icon: BsHouseDoor },
-  { label: 'How To Use',  path: '/how-to-use',   icon: BsPatchQuestion },
-  { label: 'Register',    path: '/register',     icon: BsBuilding },
-  { label: 'Calculator',  path: '/calculator',   icon: BsCalculator },
-  { label: 'New Invoice', path: '/invoices/new', icon: BsReceiptCutoff },
-  { label: 'ITC Ledger',  path: '/ledger',       icon: BsWallet2 },
-  { label: 'Tax Periods', path: '/periods',      icon: BsCalendarCheck },
-  { label: 'Quiz',        path: '/quiz',         icon: BsPatchQuestion },
+  { label: 'Overview', path: '/', icon: BsLayoutTextSidebarReverse },
+  { label: 'Calculator', path: '/calculator', icon: BsCalculator },
+  { label: 'Invoices', path: '/invoices/new', icon: BsReceipt },
+  { label: 'ITC Ledger', path: '/ledger', icon: BsJournalText },
+  { label: 'Returns', path: '/periods', icon: BsCalendarCheck },
+  { label: 'Quiz', path: '/quiz', icon: BsMortarboard },
 ];
 
 function Layout({ children }) {
-  const navigate    = useNavigate();
-  const location    = useLocation();
-  const muiTheme    = useTheme();
-  const isMobile    = useMediaQuery(muiTheme.breakpoints.down('md'));
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { business, businessId, setBusiness } = useAppStore();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const muiTheme = useTheme();
+  const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
+  const { business, isAuthenticated, user, logout, setBusiness } = useAppStore();
+
+  const activeRoute = (path) => {
+    if (path === '/' && location.pathname !== '/') return false;
+    return location.pathname.startsWith(path);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   useEffect(() => {
-    if (businessId && !business) {
-      getBusiness(businessId).then(setBusiness).catch(() => {});
+    if (isAuthenticated && !business) {
+      // Logic to fetch business if needed
     }
-  }, [businessId]);
-
-  const activeRoute = (path) => location.pathname === path;
+  }, [isAuthenticated]);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      {/* ── AppBar ── */}
-      <AppBar position="sticky" elevation={0} sx={{
-        bgcolor: 'rgba(255,255,255,0.85)',
-        backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(0,0,0,0.06)',
-        color: 'text.primary',
-        zIndex: 1200
-      }}>
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* ── Navbar ── */}
+      <AppBar position="sticky" elevation={0} sx={{ bgcolor: 'white', borderBottom: '1px solid', borderColor: 'divider' }}>
         <Toolbar sx={{ gap: 1, px: { xs: 1.5, md: 3 }, py: 0.5 }}>
           {/* Hamburger (mobile) */}
           {isMobile && (
@@ -77,7 +79,7 @@ function Layout({ children }) {
 
           {/* Logo + Brand */}
           <Stack
-            direction="row" alignItems="center" spacing={1.5}
+            direction="row" alignItems="center" spacing={1}
             sx={{ cursor: 'pointer', flexShrink: 0, mr: { xs: 'auto', md: 4 } }}
             onClick={() => navigate('/')}
           >
@@ -86,45 +88,27 @@ function Layout({ children }) {
               src={LOGO_URL}
               alt="Aadhira Solutions Logo"
               onError={(e) => { e.target.style.display = 'none'; }}
-              sx={{ height: 48, width: 48, objectFit: 'contain', mixBlendMode: 'multiply', alignSelf: 'center', ml: -1 }}
+              sx={{ height: 40, width: 40, objectFit: 'contain', mixBlendMode: 'multiply' }}
             />
-            <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-              <Typography variant="h6" color="primary.main" lineHeight={1.1} sx={{ fontSize: '1.2rem', letterSpacing: '-0.02em' }}>
-                Aadhira Solutions
-              </Typography>
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, letterSpacing: '0.05em', fontSize: '0.68rem', textTransform: 'uppercase' }}>
-                GST Learning Simulator
-              </Typography>
-            </Box>
-            <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
-              <Typography variant="subtitle1" color="primary.main" fontWeight={800}>Aadhira GST</Typography>
-            </Box>
           </Stack>
 
           {/* Desktop Nav Links */}
           {!isMobile && (
-            <Box sx={{ display: 'flex', gap: 0.5, flex: 1, overflowX: 'auto', '&::-webkit-scrollbar': { display: 'none' }, msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+            <Box sx={{ display: 'flex', gap: 1 }}>
               {NAV_ITEMS.map((item) => {
                 const Icon = item.icon;
                 const active = activeRoute(item.path);
                 return (
                   <Button
                     key={item.path}
-                    color={active ? 'primary' : 'inherit'}
-                    onClick={() => navigate(item.path)}
                     startIcon={<Icon size={16} />}
+                    onClick={() => navigate(item.path)}
                     sx={{
-                      fontSize: '0.85rem',
-                      px: 2,
-                      py: 1,
-                      minWidth: 'unset',
-                      fontWeight: active ? 700 : 500,
-                      color: active ? 'primary.main' : 'text.secondary',
-                      borderRadius: 3,
-                      bgcolor: active ? 'rgba(26,60,110,0.08)' : 'transparent',
-                      '&:hover': { bgcolor: 'rgba(26,60,110,0.05)', color: 'primary.main' },
-                      transition: 'all 0.2s ease',
+                      px: 2, py: 1, borderRadius: 2, color: active ? 'primary.main' : 'text.secondary',
+                      bgcolor: active ? 'rgba(26,60,110,0.06)' : 'transparent',
+                      fontWeight: active ? 700 : 500, fontSize: '0.9rem',
                       whiteSpace: 'nowrap',
+                      '&:hover': { bgcolor: 'rgba(26,60,110,0.04)' },
                     }}
                   >
                     {item.label}
@@ -134,32 +118,47 @@ function Layout({ children }) {
             </Box>
           )}
 
-          {/* Business badge / Register CTA */}
-          {business ? (
-            <Tooltip title={`GSTIN: ${business.gstin} | ${business.state}`} arrow>
-              <Chip
-                label={isMobile ? business.name.split(' ')[0] : business.name}
-                icon={<BsPersonCircle size={15} style={{ marginLeft: 8 }} />}
-                size="medium"
-                color="primary"
-                sx={{
-                  maxWidth: { xs: 120, md: 200 },
-                  fontWeight: 600,
-                  boxShadow: '0 2px 8px rgba(26,60,110,0.2)',
-                  '& .MuiChip-label': { fontSize: '0.8rem' },
-                  flexShrink: 0,
-                }}
-              />
-            </Tooltip>
+          {/* Auth & Active Business Badge */}
+          {isAuthenticated ? (
+            <Stack direction="row" alignItems="center" spacing={1.5} sx={{ ml: 'auto' }}>
+              {!isMobile && (
+                <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                  {user?.name}
+                </Typography>
+              )}
+              {business ? (
+                <Tooltip title="Your active simulated business">
+                  <Chip
+                    icon={<BsBuilding size={14} color="#1a3c6e" />}
+                    label={isMobile ? business.name.substring(0, 8) + '...' : `${business.name} (${business.state_code})`}
+                    variant="outlined"
+                    clickable
+                    onClick={() => navigate('/')}
+                    sx={{
+                      fontWeight: 600, borderColor: '#1a3c6e', color: '#1a3c6e',
+                      bgcolor: 'rgba(26,60,110,0.04)', px: 0.5,
+                      flexShrink: 0,
+                    }}
+                  />
+                </Tooltip>
+              ) : (
+                <Button
+                  variant="contained" size="medium" color="primary"
+                  onClick={() => navigate('/register-business')}
+                  sx={{ fontSize: '0.8rem', whiteSpace: 'nowrap', flexShrink: 0 }}
+                >
+                  Create Business
+                </Button>
+              )}
+              <Button size="small" onClick={handleLogout} sx={{ minWidth: 'auto', color: 'text.secondary' }}>
+                Logout
+              </Button>
+            </Stack>
           ) : (
-            <Button
-              variant="contained" size="medium" color="primary"
-              startIcon={<BsBuilding size={14} />}
-              onClick={() => navigate('/register')}
-              sx={{ fontSize: '0.8rem', whiteSpace: 'nowrap', flexShrink: 0, boxShadow: '0 4px 12px rgba(26,60,110,0.25)' }}
-            >
-              {isMobile ? 'Register' : 'Register Business'}
-            </Button>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ ml: 'auto' }}>
+              <Button size="small" onClick={() => navigate('/login')} sx={{ fontWeight: 600 }}>Login</Button>
+              <Button variant="contained" size="small" onClick={() => navigate('/register')} sx={{ fontWeight: 600, boxShadow: 'none' }}>Sign Up</Button>
+            </Stack>
           )}
         </Toolbar>
       </AppBar>
@@ -173,23 +172,19 @@ function Layout({ children }) {
       >
         <Box sx={{ background: 'linear-gradient(180deg,#1a3c6e 0%,#2d5fa0 100%)', p: 2.5, color: 'white' }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Stack direction="row" spacing={1.5} alignItems="center">
-              <Box
-                component="img" src={LOGO_URL} alt="Logo"
-                sx={{ height: 38, width: 38, objectFit: 'contain', borderRadius: 1.5, alignSelf: 'center' }}
-                onError={(e) => { e.target.style.display = 'none'; }}
-              />
-              <Box>
-                <Typography fontWeight={800} fontSize="0.95rem">Aadhira Solutions</Typography>
-                <Typography variant="caption" sx={{ opacity: 0.7, fontSize: '0.65rem' }}>GST Learning Simulator</Typography>
-              </Box>
-            </Stack>
+            <Typography fontWeight={800}>Aadhira Solutions</Typography>
             <IconButton onClick={() => setDrawerOpen(false)} sx={{ color: 'white' }} size="small">
               <BsX size={20} />
             </IconButton>
           </Stack>
-          {business && (
+          {isAuthenticated && (
             <Box sx={{ mt: 2, p: 1.5, bgcolor: 'rgba(255,255,255,0.12)', borderRadius: 2 }}>
+              <Typography variant="caption" sx={{ opacity: 0.7 }}>Logged in as</Typography>
+              <Typography fontWeight={700} fontSize="0.85rem">{user?.name}</Typography>
+            </Box>
+          )}
+          {business && (
+            <Box sx={{ mt: 1, p: 1.5, bgcolor: 'rgba(255,255,255,0.12)', borderRadius: 2 }}>
               <Typography variant="caption" sx={{ opacity: 0.7 }}>Active Business</Typography>
               <Typography fontWeight={700} fontSize="0.85rem">{business.name}</Typography>
               <Typography variant="caption" sx={{ opacity: 0.7, fontSize: '0.7rem' }}>{business.gstin}</Typography>
@@ -260,7 +255,7 @@ function Layout({ children }) {
             <Typography variant="caption" fontWeight={600}>Aadhira Solutions</Typography>
           </Stack>
           <Typography variant="caption" textAlign="center" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <BsInfoCircle size={12} /> GST Learning Simulator — For Educational Use Only · Not a legal filing tool · No real APIs
+            <BsInfoCircle size={12} /> GST Learning Simulator — For Educational Use Only · Not a legal filing tool
           </Typography>
         </Stack>
       </Box>
@@ -281,7 +276,9 @@ export default function App() {
               <Routes>
                 <Route path="/"                element={<Home />} />
                 <Route path="/how-to-use"      element={<HowToUse />} />
-                <Route path="/register"        element={<Register />} />
+                <Route path="/login"           element={<Login />} />
+                <Route path="/register"        element={<RegisterUser />} />
+                <Route path="/register-business" element={<RegisterBusiness />} />
                 <Route path="/calculator"      element={<Calculator />} />
                 <Route path="/invoices/new"    element={<InvoiceNew />} />
                 <Route path="/invoices/:id"    element={<InvoiceView />} />

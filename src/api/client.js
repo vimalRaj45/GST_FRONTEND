@@ -8,6 +8,14 @@ const client = axios.create({
   timeout: 35000, // 35s to allow AI calls
 });
 
+client.interceptors.request.use((config) => {
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Response interceptor for error normalisation
 client.interceptors.response.use(
   (res) => res.data,

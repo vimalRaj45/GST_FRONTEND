@@ -97,19 +97,15 @@ export default function Home() {
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 3 }}>
           <Button
             variant="contained" size="large" color="secondary"
-            startIcon={<BsBuilding size={18} />}
-            onClick={() => navigate('/register')}
-            sx={{ px: { xs: 3, md: 4 }, py: 1.3, fontSize: '0.95rem', borderRadius: 2 }}
+            endIcon={<BsArrowRight />}
+            onClick={() => navigate('/register-business')}
+            sx={{
+              mt: { xs: 2, md: 4 }, py: { xs: 1.5, md: 2 }, px: { xs: 4, md: 5 },
+              fontSize: { xs: '1rem', md: '1.1rem' }, borderRadius: 3,
+              boxShadow: '0 8px 24px rgba(26,60,110,0.3)',
+            }}
           >
-            Register a Business
-          </Button>
-          <Button
-            variant="outlined" size="large"
-            startIcon={<BsCalculator size={18} />}
-            onClick={() => navigate('/calculator')}
-            sx={{ px: { xs: 3, md: 4 }, py: 1.3, fontSize: '0.95rem', borderRadius: 2, color: 'white', borderColor: 'rgba(255,255,255,0.45)', '&:hover': { borderColor: 'white' } }}
-          >
-            Try the Calculator
+            Create Your Business
           </Button>
         </Stack>
 
