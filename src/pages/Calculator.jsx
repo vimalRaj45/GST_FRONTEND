@@ -10,6 +10,7 @@ import {
 } from 'react-icons/bs';
 import { calculateGST } from '../api/client.js';
 import ExplainerCallout from '../components/ExplainerCallout.jsx';
+import useProgressStore from '../store/useProgressStore.js';
 
 const TAX_RATES = [0, 5, 12, 18, 28];
 const TRANSACTION_TYPES = [
@@ -59,6 +60,9 @@ export default function Calculator() {
   const [error, setError] = useState(null);
   const [liveCalc, setLiveCalc] = useState(null);
   const [showPoS, setShowPoS] = useState(false);
+  const { markModule } = useProgressStore();
+
+  useEffect(() => { markModule('usedCalculator'); }, []);
 
   useEffect(() => {
     const amt = Number(form.amount) || 0;
