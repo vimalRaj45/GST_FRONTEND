@@ -41,9 +41,14 @@ export default function Ledger() {
 
   const handleExplain = useCallback(async (entryId) => {
     setExplainDialog({ open: true, entryId }); setExplanation(null); setExplaining(true);
-    try { const res = await explainITCStatus(entryId); setExplanation(res.explanation); }
-    catch (err) { setExplanation(`Error: ${err.message}`); }
-    finally { setExplaining(false); }
+    try { 
+      const res = await explainITCStatus(entryId); 
+      setExplanation(res.explanation); 
+    } catch (err) { 
+      setExplanation(`Error: ${err.message}`); 
+    } finally { 
+      setExplaining(false); 
+    }
   }, []);
 
   // Auto-Pilot Logic
