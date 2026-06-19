@@ -112,21 +112,21 @@ export default function TutorWidget() {
       >
         {/* Header */}
         <Box sx={{ background: 'linear-gradient(135deg,#1a3c6e,#2d5fa0)', color: 'white', p: 2 }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Stack direction="row" spacing={1.5} alignItems="center">
+          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ width: '100%' }}>
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0, flex: 1, pr: 1 }}>
               <Box
                 component="img" src={LOGO_URL} alt="Aadhira"
-                sx={{ height: 36, width: 36, borderRadius: 1.5, objectFit: 'contain' }}
+                sx={{ height: 36, width: 36, borderRadius: 1.5, objectFit: 'contain', flexShrink: 0 }}
                 onError={(e) => { e.target.style.display = 'none'; }}
               />
-              <Box>
-                <Typography fontWeight={800} fontSize="0.95rem">GST Tutor</Typography>
-                <Typography variant="caption" sx={{ opacity: 0.75, fontSize: '0.65rem' }}>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography fontWeight={800} fontSize="0.95rem" noWrap>GST Tutor</Typography>
+                <Typography variant="caption" sx={{ opacity: 0.75, fontSize: '0.65rem', display: 'block', lineHeight: 1.2 }}>
                   Aadhira Solutions · Powered by Mistral AI
                 </Typography>
               </Box>
             </Stack>
-            <IconButton onClick={() => setOpen(false)} sx={{ color: 'white' }} size="small">
+            <IconButton onClick={() => setOpen(false)} sx={{ color: 'white', flexShrink: 0 }} size="small">
               <BsX size={22} />
             </IconButton>
           </Stack>
