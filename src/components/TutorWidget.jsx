@@ -103,8 +103,8 @@ export default function TutorWidget() {
         onClose={() => setOpen(false)}
         PaperProps={{
           sx: {
-            width: { xs: '100vw', sm: 420 },
-            maxWidth: '100vw',
+            width: { xs: '100%', sm: 420 },
+            maxWidth: '100%',
             display: 'flex', flexDirection: 'column',
             boxShadow: '-8px 0 32px rgba(0,0,0,0.12)',
           },
