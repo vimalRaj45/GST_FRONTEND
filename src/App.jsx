@@ -30,6 +30,7 @@ import Periods from './pages/Periods.jsx';
 import FilingReview from './pages/FilingReview.jsx';
 import Quiz from './pages/Quiz.jsx';
 import HowToUse from './pages/HowToUse.jsx';
+import AdminDashboard from './pages/AdminDashboard.jsx';
 
 const LOGO_URL = 'https://aadhirasolutions-hacakthon.onrender.com/logo.png';
 
@@ -131,6 +132,15 @@ function Layout({ children }) {
                     {user?.name}
                   </Typography>
                 </Stack>
+              )}
+              {user?.role === 'admin' && (
+                <Button
+                  variant="outlined" size="small" color="error"
+                  onClick={() => navigate('/admin')}
+                  sx={{ fontSize: '0.8rem', whiteSpace: 'nowrap', flexShrink: 0, fontWeight: 700 }}
+                >
+                  Admin Panel
+                </Button>
               )}
               {business ? (
                 <Tooltip title="Your active simulated business">
@@ -292,6 +302,7 @@ export default function App() {
                 <Route path="/periods"         element={<Periods />} />
                 <Route path="/periods/:id/file" element={<FilingReview />} />
                 <Route path="/quiz"            element={<Quiz />} />
+                <Route path="/admin"           element={<AdminDashboard />} />
               </Routes>
             </Layout>
           } />

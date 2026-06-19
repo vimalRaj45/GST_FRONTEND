@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, TextField, Button, Paper, Stack, Alert } from '@mui/material';
+import { Box, Typography, TextField, Button, Paper, Stack, Alert, CircularProgress } from '@mui/material';
 import { useNavigate, Link } from 'react-router-dom';
 import client from '../api/client.js';
 import { useAppStore } from '../store/useAppStore.js';
@@ -9,24 +9,22 @@ export default function RegisterUser() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [adminCode, setAdminCode] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  
   const navigate = useNavigate();
-  const setToken = useAppStore((s) => s.setToken);
-  const setUser = useAppStore((s) => s.setUser);
+  const registerUser = useAppStore((s) => s.registerUser);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
     setLoading(true);
-
+    setError(null);
     try {
-      const res = await client.post('/api/auth/register', { name, email, password });
-      setToken(res.token);
-      setUser(res.user);
+      await registerUser(name, email, password, adminCode);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed. Please try again.');
+      setError(err.message || 'Registration failed');
     } finally {
       setLoading(false);
     }
@@ -69,13 +67,20 @@ export default function RegisterUser() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              <TextField
+                label="Teacher Invite Code (Optional)"
+                fullWidth
+                placeholder="Leave blank if you are a student"
+                value={adminCode}
+                onChange={(e) => setAdminCode(e.target.value)}
+              />
               <Button
                 type="submit"
                 variant="contained"
                 size="large"
-                disabled={loading}
-                startIcon={<BsPersonPlus />}
-                sx={{ mt: 2, py: 1.5, fontSize: '1rem' }}
+                disabled={loading || !email || !password || !name}
+                startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <BsPersonPlus size={18} />}
+                sx={{ mt: 2, py: 1.5, fontSize: '1rem', borderRadius: 2 }}
               >
                 {loading ? 'Creating Account...' : 'Sign Up'}
               </Button>

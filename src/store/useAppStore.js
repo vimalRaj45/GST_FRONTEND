@@ -33,6 +33,18 @@ export const useAppStore = create((set, get) => ({
 
   setUser: (user) => set({ user }),
 
+  login: async (email, password) => {
+    const res = await (await import('../api/client.js')).default.post('/api/auth/login', { email, password });
+    get().setToken(res.token);
+    get().setUser(res.user);
+  },
+
+  registerUser: async (name, email, password, admin_code) => {
+    const res = await (await import('../api/client.js')).default.post('/api/auth/register', { name, email, password, admin_code });
+    get().setToken(res.token);
+    get().setUser(res.user);
+  },
+
   logout: () => {
     localStorage.removeItem('auth_token');
     localStorage.removeItem(BUSINESS_KEY);

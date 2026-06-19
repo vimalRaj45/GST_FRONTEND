@@ -37,6 +37,13 @@ export const getHsnCodes = (search = '') => client.get(`/api/hsn-codes?search=${
 export const calculateGST = (data) => client.post('/api/calculate-gst', data);
 
 // ── Businesses ────────────────────────────────────────────
+
+// --- Admin Endpoints ---
+
+export const getStudents = () => client.get('/api/admin/students');
+
+export const createBusinessForStudent = (data) => client.post('/api/admin/businesses', data);
+
 export const createBusiness = (data) => client.post('/api/businesses', data);
 export const getBusiness = (id) => client.get(`/api/businesses/${id}`);
 export const listBusinesses = (sessionId) =>
