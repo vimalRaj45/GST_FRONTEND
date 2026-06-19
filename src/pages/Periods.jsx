@@ -49,6 +49,8 @@ export default function Periods() {
     }
   };
 
+  const autoPilotTimer = React.useRef(null);
+
   // Auto-Pilot Logic
   useEffect(() => {
     if (error || snack.severity === 'error') return; // Stop on error
@@ -57,13 +59,25 @@ export default function Periods() {
       const openPeriod = periods.find(p => p.status === 'open');
       
       if (closedPeriod) {
-        const timer = setTimeout(() => navigate(`/periods/${closedPeriod.id}/file`), 2000);
-        return () => clearTimeout(timer);
+        if (!autoPilotTimer.current) {
+          autoPilotTimer.current = setTimeout(() => {
+            autoPilotTimer.current = null;
+            navigate(`/periods/${closedPeriod.id}/file`);
+          }, 3000); // Wait 3 seconds so user can read the success
+        }
       } else if (openPeriod && !closingId) {
-        const timer = setTimeout(() => handleClose(openPeriod), 2000);
-        return () => clearTimeout(timer);
+        if (!autoPilotTimer.current) {
+          autoPilotTimer.current = setTimeout(() => {
+            autoPilotTimer.current = null;
+            handleClose(openPeriod);
+          }, 2000);
+        }
       }
     }
+    
+    return () => {
+      if (autoPilotTimer.current) clearTimeout(autoPilotTimer.current);
+    };
   }, [isTourActive, tourStep, periods, closingId, navigate, error, snack.severity]);
 
   if (!business) return <Alert severity="warning">Please register a business first.</Alert>;

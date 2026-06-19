@@ -28,24 +28,33 @@ export default function FilingReview() {
     getFilingPreview(id, business.id).then(setPreview).catch((e) => setError(e.message)).finally(() => setLoading(false));
   }, [id, business?.id]);
 
+  const autoPilotTimer = React.useRef(null);
+
   // Auto-Pilot Logic
   useEffect(() => {
     if (error) return; // Stop on error
     if (isTourActive && tourStep === 4) {
       if (step === 0 && preview) {
-        const timer = setTimeout(() => setStep(1), 2000);
-        return () => clearTimeout(timer);
+        if (!autoPilotTimer.current) {
+          autoPilotTimer.current = setTimeout(() => { autoPilotTimer.current = null; setStep(1); }, 2000);
+        }
       } else if (step === 1) {
-        const timer = setTimeout(() => setStep(2), 2000);
-        return () => clearTimeout(timer);
+        if (!autoPilotTimer.current) {
+          autoPilotTimer.current = setTimeout(() => { autoPilotTimer.current = null; setStep(2); }, 2000);
+        }
       } else if (step === 2 && !filing && !result) {
-        const timer = setTimeout(() => {
-          document.getElementById('auto-file-btn')?.click();
-        }, 2000);
-        return () => clearTimeout(timer);
+        if (!autoPilotTimer.current) {
+          autoPilotTimer.current = setTimeout(() => {
+            autoPilotTimer.current = null;
+            document.getElementById('auto-file-btn')?.click();
+          }, 2000);
+        }
       }
     }
-  }, [isTourActive, tourStep, step, preview, filing, result]);
+    return () => {
+      if (autoPilotTimer.current) clearTimeout(autoPilotTimer.current);
+    };
+  }, [isTourActive, tourStep, step, preview, filing, result, error]);
 
   // Handle tour progression on success
   useEffect(() => {
