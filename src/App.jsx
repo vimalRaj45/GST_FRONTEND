@@ -9,7 +9,8 @@ import {
 import {
   BsHouseDoor, BsBuilding, BsCalculator, BsReceiptCutoff,
   BsWallet2, BsCalendarCheck, BsPatchQuestion, BsList, BsX,
-  BsPersonCircle, BsChevronRight, BsInfoCircle
+  BsPersonCircle, BsChevronRight, BsInfoCircle,
+  BsLayoutTextSidebarReverse, BsReceipt, BsJournalText, BsMortarboard
 } from 'react-icons/bs';
 
 import theme from './theme.js';
