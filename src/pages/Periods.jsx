@@ -74,11 +74,15 @@ export default function Periods() {
         }
       }
     }
-    
+    // Do not return a cleanup function here, otherwise re-renders will cancel the timer!
+  }, [isTourActive, tourStep, periods, closingId, navigate, error, snack.severity]);
+
+  // Cleanup timer only on unmount
+  useEffect(() => {
     return () => {
       if (autoPilotTimer.current) clearTimeout(autoPilotTimer.current);
     };
-  }, [isTourActive, tourStep, periods, closingId, navigate, error, snack.severity]);
+  }, []);
 
   if (!business) return <Alert severity="warning">Please register a business first.</Alert>;
 

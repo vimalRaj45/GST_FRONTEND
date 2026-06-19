@@ -51,10 +51,15 @@ export default function FilingReview() {
         }
       }
     }
+    // Do not return a cleanup function here, otherwise re-renders will cancel the timer!
+  }, [isTourActive, tourStep, step, preview, filing, result, error]);
+
+  // Cleanup timer only on unmount
+  useEffect(() => {
     return () => {
       if (autoPilotTimer.current) clearTimeout(autoPilotTimer.current);
     };
-  }, [isTourActive, tourStep, step, preview, filing, result, error]);
+  }, []);
 
   // Handle tour progression on success
   useEffect(() => {
