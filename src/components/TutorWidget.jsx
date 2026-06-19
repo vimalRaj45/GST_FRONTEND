@@ -103,7 +103,8 @@ export default function TutorWidget() {
         onClose={() => setOpen(false)}
         PaperProps={{
           sx: {
-            width: drawerWidth,
+            width: { xs: '100vw', sm: 420 },
+            maxWidth: '100vw',
             display: 'flex', flexDirection: 'column',
             boxShadow: '-8px 0 32px rgba(0,0,0,0.12)',
           },
@@ -153,7 +154,7 @@ export default function TutorWidget() {
                 <Paper
                   elevation={1}
                   sx={{
-                    p: 1.5, maxWidth: '78%',
+                    p: 1.5, maxWidth: '85%', wordBreak: 'break-word',
                     borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                     bgcolor: msg.role === 'user' ? '#1a3c6e' : 'white',
                     color: msg.role === 'user' ? 'white' : 'text.primary',

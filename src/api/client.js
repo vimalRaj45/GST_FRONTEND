@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://gst-backend-me8o.onrender.com';
 
 const client = axios.create({
   baseURL: API_BASE,
