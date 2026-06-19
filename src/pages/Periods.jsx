@@ -51,6 +51,7 @@ export default function Periods() {
 
   // Auto-Pilot Logic
   useEffect(() => {
+    if (error || snack.severity === 'error') return; // Stop on error
     if (isTourActive && tourStep === 4 && periods.length > 0) {
       const openPeriod = periods.find(p => p.status === 'open');
       const closedPeriod = periods.find(p => p.status === 'closed');

@@ -30,6 +30,7 @@ export default function FilingReview() {
 
   // Auto-Pilot Logic
   useEffect(() => {
+    if (error) return; // Stop on error
     if (isTourActive && tourStep === 4) {
       if (step === 0 && preview) {
         const timer = setTimeout(() => setStep(1), 2000);
