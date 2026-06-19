@@ -49,44 +49,48 @@ export default function Periods() {
     }
   };
 
-  const autoPilotTimer = React.useRef(null);
-
-  // Auto-Pilot Logic
+  // Auto-Pilot Logic - Robust Polling Mechanism
   useEffect(() => {
-    if (error || snack.severity === 'error') return; // Stop on error
-    if (isTourActive && tourStep === 4 && periods.length > 0) {
+    if (!isTourActive || tourStep !== 4) return;
+    
+    const interval = setInterval(() => {
+      // Check for errors
+      if (error || snack.severity === 'error') {
+        clearInterval(interval);
+        return;
+      }
+      
+      // We need periods to be loaded
+      if (!periods || periods.length === 0) return;
+      
       const closedPeriod = periods.find(p => p.status === 'closed');
       const openPeriod = periods.find(p => p.status === 'open');
       
       if (closedPeriod) {
-        if (!autoPilotTimer.current) {
-          autoPilotTimer.current = setTimeout(() => {
-            autoPilotTimer.current = null;
-            const btn = document.getElementById(`file-return-btn-${closedPeriod.id}`);
-            if (btn) btn.click();
-            else navigate(`/periods/${closedPeriod.id}/file`); // Fallback
-          }, 1500); // Reduced to 1.5s
+        // Find the button in the DOM directly
+        const btn = document.getElementById(`file-return-btn-${closedPeriod.id}`);
+        if (btn && !btn.disabled) {
+          clearInterval(interval); // Stop polling once we click
+          btn.click();
+        } else if (!btn) {
+          // Fallback if button is missing from DOM for some reason
+          clearInterval(interval);
+          navigate(`/periods/${closedPeriod.id}/file`);
         }
       } else if (openPeriod && !closingId) {
-        if (!autoPilotTimer.current) {
-          autoPilotTimer.current = setTimeout(() => {
-            autoPilotTimer.current = null;
-            const btn = document.getElementById(`close-period-btn-${openPeriod.id}`);
-            if (btn) btn.click();
-            else handleClose(openPeriod); // Fallback
-          }, 1500); // Reduced to 1.5s
+        const btn = document.getElementById(`close-period-btn-${openPeriod.id}`);
+        if (btn && !btn.disabled) {
+          // We don't clear interval here because we want it to keep polling
+          // so it can catch the 'closed' state after this finishes!
+          btn.click();
+        } else if (!btn) {
+          handleClose(openPeriod);
         }
       }
-    }
-    // Do not return a cleanup function here, otherwise re-renders will cancel the timer!
-  }, [isTourActive, tourStep, periods, closingId, navigate, error, snack.severity]);
-
-  // Cleanup timer only on unmount
-  useEffect(() => {
-    return () => {
-      if (autoPilotTimer.current) clearTimeout(autoPilotTimer.current);
-    };
-  }, []);
+    }, 1500); // Poll every 1.5s
+    
+    return () => clearInterval(interval);
+  }, [isTourActive, tourStep, periods, closingId, error, snack.severity, navigate]);
 
   if (!business) return <Alert severity="warning">Please register a business first.</Alert>;
 

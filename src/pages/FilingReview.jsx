@@ -28,38 +28,31 @@ export default function FilingReview() {
     getFilingPreview(id, business.id).then(setPreview).catch((e) => setError(e.message)).finally(() => setLoading(false));
   }, [id, business?.id]);
 
-  const autoPilotTimer = React.useRef(null);
-
-  // Auto-Pilot Logic
+  // Auto-Pilot Logic - Robust Polling Mechanism
   useEffect(() => {
-    if (error) return; // Stop on error
-    if (isTourActive && tourStep === 4) {
+    if (!isTourActive || tourStep !== 4) return;
+    
+    const interval = setInterval(() => {
+      if (error) {
+        clearInterval(interval);
+        return;
+      }
+      
       if (step === 0 && preview) {
-        if (!autoPilotTimer.current) {
-          autoPilotTimer.current = setTimeout(() => { autoPilotTimer.current = null; setStep(1); }, 2000);
-        }
+        setStep(1);
       } else if (step === 1) {
-        if (!autoPilotTimer.current) {
-          autoPilotTimer.current = setTimeout(() => { autoPilotTimer.current = null; setStep(2); }, 2000);
-        }
+        setStep(2);
       } else if (step === 2 && !filing && !result) {
-        if (!autoPilotTimer.current) {
-          autoPilotTimer.current = setTimeout(() => {
-            autoPilotTimer.current = null;
-            document.getElementById('auto-file-btn')?.click();
-          }, 2000);
+        const btn = document.getElementById('auto-file-btn');
+        if (btn && !btn.disabled) {
+          clearInterval(interval);
+          btn.click();
         }
       }
-    }
-    // Do not return a cleanup function here, otherwise re-renders will cancel the timer!
+    }, 1500); // Poll every 1.5s
+    
+    return () => clearInterval(interval);
   }, [isTourActive, tourStep, step, preview, filing, result, error]);
-
-  // Cleanup timer only on unmount
-  useEffect(() => {
-    return () => {
-      if (autoPilotTimer.current) clearTimeout(autoPilotTimer.current);
-    };
-  }, []);
 
   // Handle tour progression on success
   useEffect(() => {
