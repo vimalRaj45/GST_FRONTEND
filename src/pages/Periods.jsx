@@ -62,15 +62,19 @@ export default function Periods() {
         if (!autoPilotTimer.current) {
           autoPilotTimer.current = setTimeout(() => {
             autoPilotTimer.current = null;
-            navigate(`/periods/${closedPeriod.id}/file`);
-          }, 3000); // Wait 3 seconds so user can read the success
+            const btn = document.getElementById(`file-return-btn-${closedPeriod.id}`);
+            if (btn) btn.click();
+            else navigate(`/periods/${closedPeriod.id}/file`); // Fallback
+          }, 1500); // Reduced to 1.5s
         }
       } else if (openPeriod && !closingId) {
         if (!autoPilotTimer.current) {
           autoPilotTimer.current = setTimeout(() => {
             autoPilotTimer.current = null;
-            handleClose(openPeriod);
-          }, 2000);
+            const btn = document.getElementById(`close-period-btn-${openPeriod.id}`);
+            if (btn) btn.click();
+            else handleClose(openPeriod); // Fallback
+          }, 1500); // Reduced to 1.5s
         }
       }
     }
@@ -122,14 +126,14 @@ export default function Periods() {
               {p.net_payable != null && <Typography variant="caption" display="block">Net Payable: <strong>₹{Number(p.net_payable).toFixed(2)}</strong></Typography>}
               <Box sx={{ mt: 1.5 }}>
                 {p.status === 'open' && (
-                  <Button fullWidth variant="contained" color="warning" size="small"
+                  <Button id={`close-period-btn-${p.id}`} fullWidth variant="contained" color="warning" size="small"
                     startIcon={closingId === p.id ? <CircularProgress size={14} color="inherit" /> : <BsLock size={14} />}
                     disabled={closingId === p.id} onClick={() => handleClose(p)}>
                     {closingId === p.id ? 'Closing...' : 'Close Period'}
                   </Button>
                 )}
                 {p.status === 'closed' && (
-                  <Button fullWidth variant="contained" color="success" size="small"
+                  <Button id={`file-return-btn-${p.id}`} fullWidth variant="contained" color="success" size="small"
                     startIcon={<BsFileEarmarkText size={14} />}
                     onClick={() => navigate(`/periods/${p.id}/file`)}>
                     File Return
@@ -184,14 +188,14 @@ export default function Periods() {
                     <TableCell>
                       <Stack direction="row" spacing={1}>
                         {p.status === 'open' && (
-                          <Button size="small" variant="contained" color="warning"
+                          <Button id={`close-period-btn-${p.id}`} size="small" variant="contained" color="warning"
                             startIcon={closingId === p.id ? <CircularProgress size={12} color="inherit" /> : <BsLock size={13} />}
                             disabled={closingId === p.id} onClick={() => handleClose(p)}>
                             {closingId === p.id ? 'Closing...' : 'Close'}
                           </Button>
                         )}
                         {p.status === 'closed' && (
-                          <Button size="small" variant="contained" color="success"
+                          <Button id={`file-return-btn-${p.id}`} size="small" variant="contained" color="success"
                             startIcon={<BsFileEarmarkText size={13} />}
                             onClick={() => navigate(`/periods/${p.id}/file`)}>
                             File Return
