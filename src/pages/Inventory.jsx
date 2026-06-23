@@ -320,7 +320,7 @@ export default function Inventory() {
       {/* Add Product Dialog */}
       <Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)} maxWidth="sm" fullWidth>
         <form onSubmit={handleAddSubmit}>
-          <DialogTitle sx={{ fontWeight: 700 }}>Add Product to Inventory</DialogTitle>
+          <DialogTitle sx={{ fontWeight: 700, color: 'primary.main' }}>Add Product to Inventory</DialogTitle>
           <DialogContent dividers>
             <Grid container spacing={2.5}>
               <Grid size={{ xs: 12 }}>
@@ -431,7 +431,7 @@ export default function Inventory() {
       {/* Adjust Stock Dialog */}
       <Dialog open={stockDialogOpen} onClose={() => setStockDialogOpen(false)} maxWidth="xs" fullWidth>
         <form onSubmit={handleStockSubmit}>
-          <DialogTitle sx={{ fontWeight: 700 }}>Adjust Stock Level</DialogTitle>
+          <DialogTitle sx={{ fontWeight: 700, color: 'primary.main' }}>Adjust Stock Level</DialogTitle>
           <DialogContent dividers>
             <Typography variant="body2" sx={{ mb: 2 }}>
               Update stock quantity for <strong>{selectedProduct?.name}</strong>.
