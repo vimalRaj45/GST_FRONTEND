@@ -185,7 +185,7 @@ export default function Inventory() {
 
       {/* Stats Summary Widgets */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={6} sm={3}>
+        <Grid size={{ xs: 6, sm: 3 }}>
           <Card variant="outlined" sx={{ borderLeft: '4px solid #1a3c6e', borderRadius: 2 }}>
             <CardContent sx={{ p: 2 }}>
               <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">TOTAL PRODUCTS</Typography>
@@ -193,7 +193,7 @@ export default function Inventory() {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={6} sm={3}>
+        <Grid size={{ xs: 6, sm: 3 }}>
           <Card variant="outlined" sx={{ borderLeft: '4px solid #d32f2f', borderRadius: 2 }}>
             <CardContent sx={{ p: 2 }}>
               <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">LOW STOCK ALERTS</Typography>
@@ -201,7 +201,7 @@ export default function Inventory() {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={6} sm={3}>
+        <Grid size={{ xs: 6, sm: 3 }}>
           <Card variant="outlined" sx={{ borderLeft: '4px solid #2e7d32', borderRadius: 2 }}>
             <CardContent sx={{ p: 2 }}>
               <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">INVENTORY VALUE</Typography>
@@ -209,7 +209,7 @@ export default function Inventory() {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={6} sm={3}>
+        <Grid size={{ xs: 6, sm: 3 }}>
           <Card variant="outlined" sx={{ borderLeft: '4px solid #ed6c02', borderRadius: 2 }}>
             <CardContent sx={{ p: 2 }}>
               <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">AVG TAX RATE</Typography>
@@ -322,8 +322,8 @@ export default function Inventory() {
         <form onSubmit={handleAddSubmit}>
           <DialogTitle sx={{ fontWeight: 700 }}>Add Product to Inventory</DialogTitle>
           <DialogContent dividers>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
+            <Grid container spacing={2.5}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   label="Product Name"
                   value={newProduct.name}
@@ -333,7 +333,7 @@ export default function Inventory() {
                   size="small"
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Autocomplete
                   options={hsnOptions}
                   getOptionLabel={(o) => `${o.code} — ${o.description}`}
@@ -363,7 +363,7 @@ export default function Inventory() {
                   )}
                 />
               </Grid>
-              <Grid item xs={6}>
+              <Grid size={{ xs: 6 }}>
                 <TextField
                   label="Unit Price (₹)"
                   type="number"
@@ -375,7 +375,7 @@ export default function Inventory() {
                   inputProps={{ min: "0", step: "0.01" }}
                 />
               </Grid>
-              <Grid item xs={6}>
+              <Grid size={{ xs: 6 }}>
                 <TextField
                   select
                   label="Tax Rate"
@@ -392,7 +392,7 @@ export default function Inventory() {
                   <option value="28">28%</option>
                 </TextField>
               </Grid>
-              <Grid item xs={6}>
+              <Grid size={{ xs: 6 }}>
                 <TextField
                   label="Initial Stock Qty"
                   type="number"
@@ -404,7 +404,7 @@ export default function Inventory() {
                   inputProps={{ min: "0" }}
                 />
               </Grid>
-              <Grid item xs={6}>
+              <Grid size={{ xs: 6 }}>
                 <TextField
                   label="Min Alert Qty"
                   type="number"
