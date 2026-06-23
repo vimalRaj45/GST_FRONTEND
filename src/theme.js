@@ -10,15 +10,15 @@ const theme = createTheme({
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#f59e0b',      // Vibrant amber/orange
-      light: '#fbbf24',
-      dark: '#d97706',
+      main: '#2563eb',      // Professional accent blue
+      light: '#60a5fa',
+      dark: '#1d4ed8',
       contrastText: '#ffffff',
     },
-    success: { main: '#10b981', light: '#34d399', dark: '#059669' },
-    warning: { main: '#f97316', light: '#fb923c', dark: '#ea580c' },
-    error: { main: '#ef4444', light: '#f87171', dark: '#dc2626' },
-    info: { main: '#3b82f6', light: '#60a5fa', dark: '#2563eb' },
+    success: { main: '#15803d', light: '#4ade80', dark: '#166534' },
+    warning: { main: '#b45309', light: '#f59e0b', dark: '#78350f' },
+    error: { main: '#b91c1c', light: '#f87171', dark: '#7f1d1d' },
+    info: { main: '#1d4ed8', light: '#60a5fa', dark: '#1e3a8a' },
     background: {
       default: '#f8fafc', // Very light, clean slate
       paper: '#ffffff',
@@ -52,18 +52,20 @@ const theme = createTheme({
           transition: 'all 0.2s ease-in-out',
         },
         containedPrimary: {
-          background: 'linear-gradient(135deg, #1a3c6e 0%, #3660a1 100%)',
-          boxShadow: '0 4px 14px rgba(26,60,110,0.3)',
+          background: '#1a3c6e',
+          boxShadow: '0 4px 12px rgba(26,60,110,0.15)',
           '&:hover': {
-            background: 'linear-gradient(135deg, #0e2444 0%, #1a3c6e 100%)',
-            boxShadow: '0 6px 20px rgba(26,60,110,0.4)',
+            background: '#0e2444',
+            boxShadow: '0 6px 16px rgba(26,60,110,0.25)',
             transform: 'translateY(-1px)',
           },
         },
         containedSecondary: {
-          boxShadow: '0 4px 14px rgba(245,158,11,0.3)',
+          background: '#2563eb',
+          boxShadow: '0 4px 12px rgba(37,99,235,0.15)',
           '&:hover': {
-            boxShadow: '0 6px 20px rgba(245,158,11,0.4)',
+            background: '#1d4ed8',
+            boxShadow: '0 6px 16px rgba(37,99,235,0.25)',
             transform: 'translateY(-1px)',
           },
         },

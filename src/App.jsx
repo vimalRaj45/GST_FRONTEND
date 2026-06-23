@@ -1,23 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
+import { Toaster, toast } from 'react-hot-toast';
 import {
   Box, AppBar, Toolbar, Typography, Button, IconButton, Avatar,
   Tooltip, Drawer, List, ListItem, ListItemIcon, ListItemText,
   ListItemButton, Divider, Stack, Chip, useMediaQuery, useTheme
 } from '@mui/material';
 import {
-  BsHouseDoor, BsBuilding, BsCalculator, BsReceiptCutoff,
-  BsWallet2, BsCalendarCheck, BsPatchQuestion, BsList, BsX,
+  BsBuilding, BsCalculator,
+  BsCalendarCheck, BsList, BsX,
   BsPersonCircle, BsChevronRight, BsInfoCircle,
   BsLayoutTextSidebarReverse, BsReceipt, BsJournalText, BsMortarboard,
-  BsCardList, BsTrophy, BsTruck
+  BsCardList, BsTrophy, BsBoxSeam
 } from 'react-icons/bs';
 
 import theme from './theme.js';
 import { useAppStore } from './store/useAppStore.js';
-import { getBusiness } from './api/client.js';
+import { getBusiness, isOfflineMode } from './api/client.js';
 import TutorWidget from './components/TutorWidget.jsx';
+import GuidedLearning from './components/GuidedLearning.jsx';
+import GuideBanner from './components/GuideBanner.jsx';
+import { useGuideStore } from './store/useGuideStore.js';
+import SplashScreen from './components/SplashScreen.jsx';
 
 import Home from './pages/Home.jsx';
 import Login from './pages/Login.jsx';
@@ -26,28 +31,31 @@ import RegisterBusiness from './pages/RegisterBusiness.jsx';
 import Calculator from './pages/Calculator.jsx';
 import InvoiceNew from './pages/InvoiceNew.jsx';
 import InvoiceView from './pages/InvoiceView.jsx';
+import SellInvoice from './pages/SellInvoice.jsx';
+import PurchaseInvoice from './pages/PurchaseInvoice.jsx';
 import Ledger from './pages/Ledger.jsx';
 import Periods from './pages/Periods.jsx';
 import FilingReview from './pages/FilingReview.jsx';
 import Quiz from './pages/Quiz.jsx';
-import HowToUse from './pages/HowToUse.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import Gstr1View from './pages/Gstr1View.jsx';
 import HsnExplorer from './pages/HsnExplorer.jsx';
-import Progress from './pages/Progress.jsx';
 import EWayBill from './pages/EWayBill.jsx';
+import Progress from './pages/Progress.jsx';
+import Inventory from './pages/Inventory.jsx';
 
 const LOGO_URL = '/logo.png';
 
 const NAV_ITEMS = [
-  { label: 'Overview', path: '/', icon: BsLayoutTextSidebarReverse },
-  { label: 'Calculator', path: '/calculator', icon: BsCalculator },
-  { label: 'Invoices', path: '/invoices/new', icon: BsReceipt },
-  { label: 'ITC Ledger', path: '/ledger', icon: BsJournalText },
-  { label: 'Returns', path: '/periods', icon: BsCalendarCheck },
-  { label: 'HSN Codes', path: '/hsn-explorer', icon: BsCardList },
-  { label: 'Quiz', path: '/quiz', icon: BsMortarboard },
-  { label: 'Progress', path: '/progress', icon: BsTrophy },
+  { label: 'Overview',    path: '/',               icon: BsLayoutTextSidebarReverse },
+  { label: 'Calculator',  path: '/calculator',     icon: BsCalculator },
+  { label: 'Inventory',   path: '/inventory',      icon: BsBoxSeam },
+  { label: 'Invoices',    path: '/invoices/sell',  icon: BsReceipt },
+  { label: 'ITC Ledger',  path: '/ledger',         icon: BsJournalText },
+  { label: 'Returns',     path: '/periods',        icon: BsCalendarCheck },
+  { label: 'HSN Codes',   path: '/hsn-explorer',   icon: BsCardList },
+  { label: 'Quiz',        path: '/quiz',           icon: BsMortarboard },
+  { label: 'Progress',    path: '/progress',       icon: BsTrophy },
 ];
 
 function Layout({ children }) {
@@ -55,8 +63,10 @@ function Layout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const muiTheme = useTheme();
-  const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
-  const { business, isAuthenticated, user, logout, setBusiness } = useAppStore();
+  const isMobile = useMediaQuery(muiTheme.breakpoints.down('lg'));
+  const isSmallScreen = useMediaQuery(muiTheme.breakpoints.down('sm'));
+  const { business, isAuthenticated, user, logout, setBusiness, loadUser } = useAppStore();
+  const { active: guideActive } = useGuideStore();
 
   const activeRoute = (path) => {
     if (path === '/' && location.pathname !== '/') return false;
@@ -68,28 +78,31 @@ function Layout({ children }) {
     navigate('/');
   };
 
+
+
   useEffect(() => {
-    if (isAuthenticated && !business) {
-      // Logic to fetch business if needed
+    if (isAuthenticated) {
+      loadUser();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, loadUser]);
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', width: '100%', overflowX: 'hidden' }}>
       {/* ── Navbar ── */}
       <AppBar position="sticky" elevation={0} sx={{ bgcolor: 'white', borderBottom: '1px solid', borderColor: 'divider' }}>
-        <Toolbar sx={{ gap: 1, px: { xs: 1.5, md: 3 }, py: 0.5 }}>
+        <Toolbar sx={{ gap: { xs: 0.5, sm: 1 }, px: { xs: 2, sm: 2, md: 3 }, py: 0.5 }}>
           {/* Hamburger (mobile) */}
-          {isMobile && (
-            <IconButton color="primary" edge="start" onClick={() => setDrawerOpen(true)} size="large" sx={{ mr: 0.5 }}>
-              <BsList size={26} />
+          {isMobile && isAuthenticated && (
+            <IconButton color="primary" onClick={() => setDrawerOpen(true)} sx={{ mr: 0, ml: { xs: 0.5, sm: 0 }, p: 0.5 }}>
+              <BsList size={28} />
             </IconButton>
           )}
 
           {/* Logo + Brand */}
           <Stack
-            direction="row" alignItems="center" spacing={1}
-            sx={{ cursor: 'pointer', flexShrink: 0, mr: { xs: 'auto', md: 2 } }}
+            direction="row"
+            spacing={{ xs: 0, sm: 1.5 }}
+            sx={{ cursor: 'pointer', flexShrink: 0, mr: { xs: 'auto', lg: 3 }, alignItems: 'center' }}
             onClick={() => navigate('/')}
           >
             <Box
@@ -97,92 +110,127 @@ function Layout({ children }) {
               src={LOGO_URL}
               alt="Aadhira Solutions Logo"
               onError={(e) => { e.target.style.display = 'none'; }}
-              sx={{ height: 40, width: 40, objectFit: 'contain', mixBlendMode: 'multiply' }}
+              sx={{ 
+                height: { xs: 45, sm: 65, md: 75 }, 
+                width: { xs: 45, sm: 65, md: 75 }, 
+                objectFit: 'contain', 
+                mixBlendMode: 'multiply',
+                ml: { xs: -0.5, sm: 0 },
+                mr: { xs: -0.5, sm: 0 }
+              }}
             />
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 800,
+                fontSize: { xs: '1.05rem', sm: '1.1rem', md: '1.25rem' },
+                letterSpacing: '-0.02em',
+                color: '#1a3c6e',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {isSmallScreen ? "Aadhira" : "Aadhira Solutions"}
+            </Typography>
           </Stack>
 
           {/* Desktop Nav Links */}
-          {!isMobile && (
-            <Box sx={{ display: 'flex', gap: 1, ml: 'auto', mr: 3 }}>
+          {!isMobile && isAuthenticated && user?.role === 'student' && (
+            <Box sx={{ display: 'flex', gap: 0.5, mr: 2 }}>
               {NAV_ITEMS.map((item) => {
                 const Icon = item.icon;
                 const active = activeRoute(item.path);
                 return (
-                  <Button
-                    key={item.path}
-                    startIcon={<Icon size={16} />}
-                    onClick={() => navigate(item.path)}
-                    sx={{
-                      px: 2, py: 1, borderRadius: 2, color: active ? 'primary.main' : 'text.secondary',
-                      bgcolor: active ? 'rgba(26,60,110,0.06)' : 'transparent',
-                      fontWeight: active ? 700 : 500, fontSize: '0.9rem',
-                      whiteSpace: 'nowrap',
-                      '&:hover': { bgcolor: 'rgba(26,60,110,0.04)' },
-                    }}
-                  >
-                    {item.label}
-                  </Button>
+                  <Tooltip title={item.label} key={item.path} arrow>
+                    <Button
+                      onClick={() => navigate(item.path)}
+                      sx={{
+                        px: { xs: 1, xl: 1.5 }, py: 0.75, borderRadius: 2, color: active ? 'primary.main' : 'text.secondary',
+                        bgcolor: active ? 'rgba(26,60,110,0.06)' : 'transparent',
+                        fontWeight: active ? 700 : 500, fontSize: '0.85rem',
+                        whiteSpace: 'nowrap',
+                        minWidth: { xs: 'auto', xl: '64px' },
+                        '&:hover': { bgcolor: 'rgba(26,60,110,0.04)' },
+                      }}
+                    >
+                      <Icon size={15} />
+                      <Box component="span" sx={{ display: { xs: 'none', xl: 'inline' }, ml: 0.75 }}>
+                        {item.label}
+                      </Box>
+                    </Button>
+                  </Tooltip>
                 );
               })}
             </Box>
           )}
 
-          {/* Auth & Active Business Badge */}
-          {isAuthenticated ? (
-            <Stack direction="row" alignItems="center" spacing={1.5} sx={{ ml: { xs: 'auto', md: 0 } }}>
-              {!isMobile && (
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: '0.9rem' }}>
-                    {user?.name?.charAt(0).toUpperCase()}
-                  </Avatar>
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                    {user?.name}
-                  </Typography>
-                </Stack>
-              )}
-              {user?.role === 'admin' && (
+          {/* Auth Badge */}
+          <Stack direction="row" spacing={{ xs: 0.5, sm: 1.5 }} sx={{ ml: 'auto', alignItems: 'center' }}>
+            {isAuthenticated ? (
+              <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+                {!isMobile && (
+                  <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                    <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: '0.9rem' }}>
+                      {user?.name?.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary', display: { xs: 'none', xl: 'block' } }}>
+                      {user?.name}
+                    </Typography>
+                  </Stack>
+                )}
+                {!isSmallScreen && ['admin', 'super_admin', 'client'].includes(user?.role) && (
+                  <Button
+                    variant="outlined" size="small" color="error"
+                    onClick={() => navigate('/admin')}
+                    sx={{ fontSize: '0.8rem', whiteSpace: 'nowrap', flexShrink: 0, fontWeight: 700, py: 0.5, px: 1.5 }}
+                  >
+                    Admin Panel
+                  </Button>
+                )}
+                {user?.role === 'student' && (business ? (
+                  <Tooltip title={`Active Business: ${business.name} (${business.state})`}>
+                    <Chip
+                      icon={<BsBuilding size={14} color="#1a3c6e" />}
+                      label={business.name.length > (isSmallScreen ? 6 : 12) ? business.name.substring(0, isSmallScreen ? 6 : 12) + '...' : business.name}
+                      variant="outlined"
+                      clickable
+                      onClick={() => navigate('/register-business')}
+                      sx={{
+                        fontWeight: 600, borderColor: '#1a3c6e', color: '#1a3c6e',
+                        bgcolor: 'rgba(26,60,110,0.04)', px: 0.5,
+                        flexShrink: 0,
+                      }}
+                    />
+                  </Tooltip>
+                ) : (
+                  <Button
+                    variant="contained" size="medium" color="primary"
+                    onClick={() => navigate('/register-business')}
+                    sx={{ fontSize: '0.8rem', whiteSpace: 'nowrap', flexShrink: 0, py: 0.5, px: 1.5 }}
+                  >
+                    Select Business
+                  </Button>
+                ))}
+                {/* Logout – show inline only on desktop; on mobile it lives in the drawer */}
                 <Button
-                  variant="outlined" size="small" color="error"
-                  onClick={() => navigate('/admin')}
-                  sx={{ fontSize: '0.8rem', whiteSpace: 'nowrap', flexShrink: 0, fontWeight: 700 }}
+                  size="small"
+                  onClick={handleLogout}
+                  sx={{
+                    minWidth: 'auto',
+                    color: 'text.secondary',
+                    py: 0.5, px: 1.5,
+                    display: { xs: 'none', sm: 'flex' },
+                  }}
                 >
-                  Admin Panel
+                  Logout
                 </Button>
-              )}
-              {business ? (
-                <Tooltip title="Your active simulated business">
-                  <Chip
-                    icon={<BsBuilding size={14} color="#1a3c6e" />}
-                    label={isMobile ? business.name.substring(0, 8) + '...' : `${business.name} (${business.state_code})`}
-                    variant="outlined"
-                    clickable
-                    onClick={() => navigate('/')}
-                    sx={{
-                      fontWeight: 600, borderColor: '#1a3c6e', color: '#1a3c6e',
-                      bgcolor: 'rgba(26,60,110,0.04)', px: 0.5,
-                      flexShrink: 0,
-                    }}
-                  />
-                </Tooltip>
-              ) : (
-                <Button
-                  variant="contained" size="medium" color="primary"
-                  onClick={() => navigate('/register-business')}
-                  sx={{ fontSize: '0.8rem', whiteSpace: 'nowrap', flexShrink: 0 }}
-                >
-                  Create Business
-                </Button>
-              )}
-              <Button size="small" onClick={handleLogout} sx={{ minWidth: 'auto', color: 'text.secondary' }}>
-                Logout
-              </Button>
-            </Stack>
-          ) : (
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ ml: { xs: 'auto', md: 0 } }}>
-              <Button size="small" onClick={() => navigate('/login')} sx={{ fontWeight: 600 }}>Login</Button>
-              <Button variant="contained" size="small" onClick={() => navigate('/register')} sx={{ fontWeight: 600, boxShadow: 'none' }}>Sign Up</Button>
-            </Stack>
-          )}
+              </Stack>
+            ) : (
+              <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                <Button size="small" onClick={() => navigate('/login')} sx={{ fontWeight: 600, py: 0.5, px: 1.5 }}>Login</Button>
+                <Button variant="contained" size="small" onClick={() => navigate('/register')} sx={{ fontWeight: 600, boxShadow: 'none', py: 0.5, px: 1.5 }}>Sign Up</Button>
+              </Stack>
+            )}
+          </Stack>
         </Toolbar>
       </AppBar>
 
@@ -191,10 +239,10 @@ function Layout({ children }) {
         anchor="left"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        PaperProps={{ sx: { width: 280 } }}
+        slotProps={{ paper: { sx: { width: 280 } } }}
       >
-        <Box sx={{ background: 'linear-gradient(180deg,#1a3c6e 0%,#2d5fa0 100%)', p: 2.5, color: 'white' }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Box sx={{ bgcolor: '#1a3c6e', p: 2.5, color: 'white' }}>
+          <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography fontWeight={800}>Aadhira Solutions</Typography>
             <IconButton onClick={() => setDrawerOpen(false)} sx={{ color: 'white' }} size="small">
               <BsX size={20} />
@@ -216,31 +264,62 @@ function Layout({ children }) {
         </Box>
 
         <List sx={{ pt: 1 }}>
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const active = activeRoute(item.path);
-            return (
-              <ListItem key={item.path} disablePadding>
+          {user?.role === 'student' ? (
+            NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              const active = activeRoute(item.path);
+              return (
+                <ListItem key={item.path} disablePadding>
+                  <ListItemButton
+                    selected={active}
+                    onClick={() => { navigate(item.path); setDrawerOpen(false); }}
+                    sx={{
+                      mx: 1, borderRadius: 2, mb: 0.25,
+                      '&.Mui-selected': { bgcolor: 'primary.main', color: 'white', '& *': { color: 'white' } },
+                    }}
+                  >
+                    <ListItemIcon sx={{ minWidth: 36 }}>
+                      <Icon size={18} color={active ? '#1a3c6e' : '#666'} />
+                    </ListItemIcon>
+                    <ListItemText primary={<Typography sx={{ fontSize: '0.9rem', fontWeight: active ? 700 : 400 }}>{item.label}</Typography>} />
+                    {active && <BsChevronRight size={14} />}
+                  </ListItemButton>
+                </ListItem>
+              );
+            })
+          ) : (
+            ['admin', 'super_admin', 'client'].includes(user?.role) && (
+              <ListItem disablePadding>
                 <ListItemButton
-                  selected={active}
-                  onClick={() => { navigate(item.path); setDrawerOpen(false); }}
+                  selected={activeRoute('/admin')}
+                  onClick={() => { navigate('/admin'); setDrawerOpen(false); }}
                   sx={{
                     mx: 1, borderRadius: 2, mb: 0.25,
-                    '&.Mui-selected': { bgcolor: 'primary.main', color: 'white', '& *': { color: 'white' } },
+                    '&.Mui-selected': { bgcolor: 'error.main', color: 'white', '& *': { color: 'white' } },
                   }}
                 >
                   <ListItemIcon sx={{ minWidth: 36 }}>
-                    <Icon size={18} color={active ? '#1a3c6e' : '#666'} />
+                    <BsPersonCircle size={18} color={activeRoute('/admin') ? '#fff' : '#666'} />
                   </ListItemIcon>
-                  <ListItemText primary={item.label} primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: active ? 700 : 400 }} />
-                  {active && <BsChevronRight size={14} />}
+                  <ListItemText primary={<Typography sx={{ fontSize: '0.9rem', fontWeight: 700 }}>Admin Panel</Typography>} />
                 </ListItemButton>
               </ListItem>
-            );
-          })}
+            )
+          )}
         </List>
 
         <Box sx={{ p: 2, mt: 'auto', borderTop: '1px solid', borderColor: 'divider' }}>
+          {isAuthenticated && (
+            <Button
+              fullWidth
+              variant="outlined"
+              color="error"
+              onClick={() => { handleLogout(); setDrawerOpen(false); }}
+              sx={{ mb: 1.5, fontWeight: 700, borderRadius: 2 }}
+            >
+              Logout
+            </Button>
+          )}
           <Typography variant="caption" color="text.secondary">
             © 2026 Aadhira Solutions. Educational use only.
           </Typography>
@@ -259,17 +338,18 @@ function Layout({ children }) {
         component="footer"
         sx={{
           py: { xs: 1.5, md: 2 }, px: { xs: 2, md: 3 },
-          background: 'linear-gradient(135deg,#1a3c6e,#2d5fa0)',
+          bgcolor: '#1a3c6e',
           color: 'rgba(255,255,255,0.75)',
+          mb: guideActive ? '44px' : 0,
+          transition: 'margin-bottom 0.3s'
         }}
       >
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
-          justifyContent="space-between"
-          alignItems="center"
           spacing={1}
+          sx={{ justifyContent: 'space-between', alignItems: 'center' }}
         >
-          <Stack direction="row" spacing={1.5} alignItems="center">
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
             <Box
               component="img" src={LOGO_URL} alt="Aadhira"
               sx={{ height: 26, objectFit: 'contain', borderRadius: 1 }}
@@ -277,43 +357,104 @@ function Layout({ children }) {
             />
             <Typography variant="caption" fontWeight={600}>Aadhira Solutions</Typography>
           </Stack>
-          <Typography variant="caption" textAlign="center" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, textAlign: 'center' }}>
             <BsInfoCircle size={12} /> GST Learning Simulator — For Educational Use Only · Not a legal filing tool
           </Typography>
         </Stack>
       </Box>
 
-      <TutorWidget />
+      {isAuthenticated && user?.role === 'student' && (
+        <>
+          {!guideActive && <TutorWidget />}
+          {!guideActive && <GuidedLearning />}
+          <GuideBanner />
+        </>
+      )}
     </Box>
   );
 }
 
+function StudentGuard({ children }) {
+  const { user, isAuthenticated } = useAppStore();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      if (location.pathname !== '/') {
+        navigate('/login');
+      }
+    } else if (user && user.role !== 'student') {
+      navigate('/admin');
+    }
+  }, [isAuthenticated, user, navigate, location.pathname]);
+
+  if (!isAuthenticated) {
+    if (location.pathname !== '/') {
+      return null;
+    }
+  } else if (user && user.role !== 'student') {
+    return null;
+  }
+  return children;
+}
+
+function AdminGuard({ children }) {
+  const { user, isAuthenticated } = useAppStore();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated && user && user.role === 'student') {
+      navigate('/');
+    } else if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, user, navigate]);
+
+  if (!isAuthenticated || (user && user.role === 'student')) {
+    return null;
+  }
+  return children;
+}
+
 export default function App() {
+  const [showSplash, setShowSplash] = useState(() => {
+    // Only show splash once per browser session
+    const seen = sessionStorage.getItem('splash_shown');
+    if (seen) return false;
+    sessionStorage.setItem('splash_shown', '1');
+    return true;
+  });
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <Toaster position="top-right" toastOptions={{ duration: 4000, style: { background: '#333', color: '#fff', fontFamily: 'Outfit, sans-serif' } }} />
+      {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
       <BrowserRouter>
         <Routes>
           <Route path="/*" element={
             <Layout>
               <Routes>
-                <Route path="/"                element={<Home />} />
-                <Route path="/how-to-use"      element={<HowToUse />} />
-                <Route path="/login"           element={<Login />} />
-                <Route path="/register"        element={<RegisterUser />} />
-                <Route path="/register-business" element={<RegisterBusiness />} />
-                <Route path="/calculator"      element={<Calculator />} />
-                <Route path="/invoices/new"    element={<InvoiceNew />} />
-                <Route path="/invoices/:id"    element={<InvoiceView />} />
-                <Route path="/ledger"          element={<Ledger />} />
-                <Route path="/periods"            element={<Periods />} />
-                <Route path="/periods/:id/file"   element={<FilingReview />} />
-                <Route path="/periods/:id/gstr1"  element={<Gstr1View />} />
-                <Route path="/hsn-explorer"       element={<HsnExplorer />} />
-                <Route path="/progress"           element={<Progress />} />
-                <Route path="/ewaybill"           element={<EWayBill />} />
-                <Route path="/quiz"               element={<Quiz />} />
-                <Route path="/admin"              element={<AdminDashboard />} />
+                <Route path="/"                  element={<StudentGuard><Home /></StudentGuard>} />
+                <Route path="/login"             element={<Login />} />
+                <Route path="/register"          element={<RegisterUser />} />
+                <Route path="/register-business" element={<StudentGuard><RegisterBusiness /></StudentGuard>} />
+                <Route path="/calculator"        element={<StudentGuard><Calculator /></StudentGuard>} />
+                <Route path="/inventory"         element={<StudentGuard><Inventory /></StudentGuard>} />
+                <Route path="/invoices/new"      element={<StudentGuard><InvoiceNew /></StudentGuard>} />
+                <Route path="/invoices/sell"     element={<StudentGuard><SellInvoice /></StudentGuard>} />
+                <Route path="/invoices/purchase" element={<StudentGuard><PurchaseInvoice /></StudentGuard>} />
+                <Route path="/invoices/:id"      element={<StudentGuard><InvoiceView /></StudentGuard>} />
+                <Route path="/ledger"            element={<StudentGuard><Ledger /></StudentGuard>} />
+                <Route path="/periods"           element={<StudentGuard><Periods /></StudentGuard>} />
+                <Route path="/periods/:id/file"  element={<StudentGuard><FilingReview /></StudentGuard>} />
+                <Route path="/periods/:id/gstr1" element={<StudentGuard><Gstr1View /></StudentGuard>} />
+                <Route path="/hsn-explorer"      element={<StudentGuard><HsnExplorer /></StudentGuard>} />
+                <Route path="/ewaybill"          element={<StudentGuard><EWayBill /></StudentGuard>} />
+                <Route path="/quiz"              element={<StudentGuard><Quiz /></StudentGuard>} />
+                <Route path="/progress"          element={<StudentGuard><Progress /></StudentGuard>} />
+                <Route path="/admin"             element={<AdminGuard><AdminDashboard /></AdminGuard>} />
               </Routes>
             </Layout>
           } />

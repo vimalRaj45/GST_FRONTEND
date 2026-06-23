@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Box, Typography, Card, CardContent, Stack, Button, MenuItem, TextField,
-  Alert, CircularProgress, Divider, Chip, LinearProgress, Skeleton
+  Alert, CircularProgress, Divider, Chip, LinearProgress, Skeleton, Tabs, Tab
 } from '@mui/material';
 import {
   BsStars, BsCheckCircleFill, BsXCircleFill, BsPatchQuestion, BsArrowRight
@@ -10,6 +10,7 @@ import { generateQuizQuestion, saveQuizAttempt } from '../api/client.js';
 import { useAppStore } from '../store/useAppStore.js';
 import ExplainerCallout from '../components/ExplainerCallout.jsx';
 import useProgressStore from '../store/useProgressStore.js';
+import InstituteQuizzes from './InstituteQuizzes.jsx';
 
 const TOPICS = [
   'Input Tax Credit (ITC) rules and eligibility',
@@ -24,7 +25,7 @@ const TOPICS = [
   'ITC matching and invoice reconciliation',
 ];
 
-export default function Quiz() {
+function AIPracticeQuiz() {
   const { sessionId } = useAppStore();
   const { addQuizAttempt } = useProgressStore();
   const [topic, setTopic] = useState(TOPICS[0]);
@@ -72,7 +73,7 @@ export default function Quiz() {
           <Chip
             label={`Score: ${score.correct}/${score.total}`}
             color={score.correct === score.total ? 'success' : 'primary'}
-            size="medium" fontWeight={700}
+            size="medium" sx={{ fontWeight: 700 }}
           />
         )}
       </Stack>
@@ -187,6 +188,22 @@ export default function Quiz() {
           </CardContent>
         </Card>
       )}
+    </Box>
+  );
+}
+
+export default function Quiz() {
+  const [activeTab, setActiveTab] = useState(0);
+
+  return (
+    <Box sx={{ width: '100%' }}>
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)} centered>
+          <Tab label="AI Generated Practice Quiz" sx={{ fontWeight: 700 }} />
+          <Tab label="Institute Assigned Quizzes" sx={{ fontWeight: 700 }} />
+        </Tabs>
+      </Box>
+      {activeTab === 0 ? <AIPracticeQuiz /> : <InstituteQuizzes />}
     </Box>
   );
 }

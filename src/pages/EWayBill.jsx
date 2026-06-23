@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Box, Typography, Card, CardContent, Grid, Stack, Chip, Alert,
   Button, Stepper, Step, StepLabel, StepContent, Divider, TextField,
-  InputAdornment, CircularProgress
+  InputAdornment, CircularProgress, MenuItem
 } from '@mui/material';
 import { BsTruck, BsArrowLeft, BsArrowRight, BsInfoCircle, BsCheckCircle, BsShieldCheck, BsGeoAlt } from 'react-icons/bs';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -257,9 +257,12 @@ export default function EWayBill() {
                     select label="Mode of Transport" size="small" fullWidth
                     value={form.transportMode}
                     onChange={(e) => setForm((f) => ({ ...f, transportMode: e.target.value }))}
-                    SelectProps={{ native: true }}
                   >
-                    {['Road', 'Rail', 'Air', 'Ship'].map((m) => <option key={m} value={m}>{m}</option>)}
+                    {['Road', 'Rail', 'Air', 'Ship'].map((m) => (
+                      <MenuItem key={m} value={m}>
+                        {m}
+                      </MenuItem>
+                    ))}
                   </TextField>
                 </Stack>
                 <Stack direction="row" spacing={1.5}>
@@ -294,7 +297,7 @@ export default function EWayBill() {
                               {generated.ewbNumber}
                             </Typography>
                           </Box>
-                          <Box textAlign="right">
+                          <Box sx={{ textAlign: 'right' }}>
                             <Typography variant="caption" color="text.secondary" display="block">Valid Until</Typography>
                             <Typography fontWeight={700} color="#c62828">{generated.validUntil.date}</Typography>
                             <Typography variant="caption" color="text.secondary">({generated.validUntil.days} day{generated.validUntil.days > 1 ? 's' : ''})</Typography>

@@ -1,207 +1,309 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Box, Typography, TextField, MenuItem, FormControl, FormLabel,
-  RadioGroup, FormControlLabel, Radio, Button, Card, CardContent,
-  Alert, Divider, Stack, CircularProgress, Chip
+  Box, Typography, Button, Card, CardContent,
+  Alert, Stack, CircularProgress, Grid, Chip, Divider,
+  Tabs, Tab, TextField, MenuItem
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import {
-  BsBuilding, BsCheckCircle, BsReceiptCutoff, BsHouseDoor,
-  BsGeoAlt, BsCardList
-} from 'react-icons/bs';
-import { createBusiness } from '../api/client.js';
+import { BsBuilding, BsPlay, BsPlusCircle, BsArrowLeftRight } from 'react-icons/bs';
+import { getUnassignedBusinesses, claimBusiness, createBusiness } from '../api/client.js';
 import { useAppStore } from '../store/useAppStore.js';
-import ExplainerCallout from '../components/ExplainerCallout.jsx';
 import useProgressStore from '../store/useProgressStore.js';
 
-const STATES = [
-  'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh',
-  'Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka',
-  'Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram',
-  'Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu',
-  'Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal',
-  'Delhi','Jammu & Kashmir','Ladakh','Puducherry',
+const INDIAN_STATES = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+  'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+  'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
+  'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+  'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+  'Delhi', 'Jammu & Kashmir', 'Ladakh', 'Puducherry'
 ];
 
 export default function RegisterBusiness() {
-  const [form, setForm] = useState({ name: '', state: 'Maharashtra', scheme_type: 'regular' });
-  const [loading, setLoading] = useState(false);
+  const [tabValue, setTabValue] = useState(0);
+  const [unassigned, setUnassigned] = useState([]);
+  const [selectedId, setSelectedId] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [claiming, setClaiming] = useState(false);
   const [error, setError] = useState(null);
-  const [result, setResult] = useState(null);
+
+  // Custom business form state
+  const [customName, setCustomName] = useState('');
+  const [customState, setCustomState] = useState('Maharashtra');
+  const [customScheme, setCustomScheme] = useState('regular');
+  const [creating, setCreating] = useState(false);
 
   const navigate = useNavigate();
   const setBusiness = useAppStore((s) => s.setBusiness);
-  const sessionId = useAppStore((s) => s.sessionId);
   const isAuthenticated = useAppStore((s) => s.isAuthenticated);
+  const business = useAppStore((s) => s.business);
+  const sessionId = useAppStore((s) => s.sessionId);
   const { markModule } = useProgressStore();
 
-  const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  useEffect(() => {
+    fetchUnassigned();
+  }, [isAuthenticated]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+  const fetchUnassigned = async () => {
     try {
-      const res = await createBusiness({ ...form, session_id: sessionId });
-      setResult(res);
-      setBusiness(res.business);
-      markModule('registeredBusiness');
+      const data = await getUnassignedBusinesses();
+      setUnassigned(data);
+      if (data.length > 0) {
+        setSelectedId(data[0].id);
+      }
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Failed to fetch business scenarios.');
     } finally {
       setLoading(false);
     }
   };
 
-  if (result) {
-    return (
-      <Box maxWidth={580} mx="auto" px={{ xs: 0, sm: 1 }}>
-        <Card>
-          <CardContent sx={{ p: { xs: 3, md: 4 }, textAlign: 'center' }}>
-            <BsCheckCircle size={56} color="#2e7d32" style={{ marginBottom: 12 }} />
-            <Typography variant="h4" fontWeight={800} color="primary.main" gutterBottom>
-              Business Setup
-            </Typography>
-            <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 4 }}>
-              Register a simulated GST business to start generating invoices and filing returns.
-              {isAuthenticated ? ' This business will be saved to your account.' : ''}
-            </Typography>
+  const handleClaim = async () => {
+    if (!selectedId) return;
+    setClaiming(true);
+    setError(null);
+    try {
+      const res = await claimBusiness(selectedId);
+      setBusiness(res);
+      markModule('registeredBusiness');
+      navigate('/');
+    } catch (err) {
+      setError(err.message || 'Failed to claim business scenario.');
+    } finally {
+      setClaiming(false);
+    }
+  };
 
-            <Box
-              sx={{
-                background: 'linear-gradient(135deg,#1a3c6e,#2d5fa0)',
-                color: 'white', borderRadius: 3, p: { xs: 2.5, md: 3 }, mb: 3,
-              }}
-            >
-              <Typography variant="overline" sx={{ opacity: 0.75, fontSize: '0.65rem', letterSpacing: 2 }}>
-                YOUR GSTIN
-              </Typography>
-              <Typography
-                fontWeight={800} letterSpacing={3}
-                sx={{ fontSize: { xs: '1.3rem', sm: '1.6rem', md: '1.9rem' }, fontFamily: 'monospace', mt: 0.5 }}
-              >
-                {result.business.gstin}
-              </Typography>
-              <Typography variant="caption" sx={{ opacity: 0.7, mt: 0.5, display: 'block' }}>
-                Simulated GST Identification Number
-              </Typography>
-            </Box>
+  const handleCreateCustom = async (e) => {
+    e.preventDefault();
+    if (!customName.trim()) return;
+    setCreating(true);
+    setError(null);
+    try {
+      const res = await createBusiness({
+        name: customName.trim(),
+        state: customState,
+        scheme_type: customScheme,
+        session_id: sessionId
+      });
+      const businessObj = res.business || res;
+      setBusiness(businessObj);
+      markModule('registeredBusiness');
+      navigate('/');
+    } catch (err) {
+      setError(err.message || 'Failed to create custom business.');
+    } finally {
+      setCreating(false);
+    }
+  };
 
-            <Stack spacing={1.5} sx={{ mb: 3, textAlign: 'left' }}>
-              {[
-                { label: 'Business Name', value: result.business.name },
-                { label: 'State', value: result.business.state },
-                { label: 'Scheme', value: result.business.scheme_type, chip: true },
-                ...(result.period ? [{ label: 'Current Period', value: `${result.period.month}/${result.period.year}` }] : []),
-              ].map(({ label, value, chip }) => (
-                <Box key={label} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 0.75, borderBottom: '1px solid', borderColor: 'divider' }}>
-                  <Typography color="text.secondary" fontSize="0.875rem">{label}</Typography>
-                  {chip ? <Chip label={value} color="primary" size="small" /> : <Typography fontWeight={600} fontSize="0.875rem">{value}</Typography>}
-                </Box>
-              ))}
-            </Stack>
-
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-              <Button variant="contained" fullWidth startIcon={<BsReceiptCutoff size={16} />} onClick={() => navigate('/invoices/new')}>
-                Create First Invoice
-              </Button>
-              <Button variant="outlined" fullWidth startIcon={<BsHouseDoor size={16} />} onClick={() => navigate('/')}>
-                Back to Home
-              </Button>
-            </Stack>
-          </CardContent>
-        </Card>
-      </Box>
-    );
+  if (loading) {
+    return <Box sx={{ p: 6, textAlign: 'center' }}><CircularProgress /></Box>;
   }
 
   return (
-    <Box maxWidth={580} mx="auto" px={{ xs: 0, sm: 1 }}>
-      <ExplainerCallout title="What is GSTIN Registration?">
-        In India, every business above ₹40 lakh turnover (₹20 lakh for services) must register for GST
-        and get a 15-digit GSTIN. Here we simulate that: you get a mock GSTIN based on your state code
-        and business name — no real government APIs involved.
-      </ExplainerCallout>
+    <Box sx={{ maxWidth: 800, mx: 'auto', px: { xs: 0, sm: 1 } }}>
+      <Box sx={{ mb: 4, textAlign: 'center' }}>
+        <Typography variant="h4" fontWeight={800} color="#1a3c6e" gutterBottom>
+          Simulated Business Workspace
+        </Typography>
+        <Typography variant="subtitle1" color="text.secondary">
+          Choose a predefined learning scenario or spin up your own custom simulated business workspace.
+        </Typography>
+      </Box>
 
-      <Card>
-        <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
-          <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
-            <BsBuilding size={28} color="#1a3c6e" />
-            <Typography variant="h4" fontWeight={700} sx={{ fontSize: { xs: '1.4rem', md: '1.75rem' } }}>
-              Register a Business
-            </Typography>
-          </Stack>
+      {/* Warning if business already active */}
+      {business && (
+        <Alert severity="warning" icon={<BsArrowLeftRight size={18} />} sx={{ mb: 4, borderRadius: 2 }}>
+          <Typography fontWeight={700} sx={{ mb: 0.5 }}>Active Workspace Alert</Typography>
+          <Typography variant="body2">
+            You are currently working on <strong>{business.name}</strong> ({business.gstin}).
+            Choosing a different scenario or creating a new custom business will change your active workspace.
+            All invoices and filing records for your current business are saved and will remain intact.
+          </Typography>
+        </Alert>
+      )}
 
-          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
 
-          <form onSubmit={handleSubmit}>
-            <Stack spacing={2.5}>
-              <TextField
-                label="Business Name" name="name" value={form.name} onChange={handleChange}
-                required fullWidth placeholder="e.g. Sharma Electronics Pvt Ltd"
-                InputProps={{ startAdornment: <BsBuilding size={16} color="#999" style={{ marginRight: 8 }} /> }}
-              />
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs 
+          value={tabValue} 
+          onChange={(_, val) => { setTabValue(val); setError(null); }} 
+          variant="fullWidth"
+          textColor="primary"
+          indicatorColor="primary"
+        >
+          <Tab label="Predefined Scenarios" sx={{ fontWeight: 700, fontSize: '0.9rem' }} />
+          <Tab label="Create Custom Business" sx={{ fontWeight: 700, fontSize: '0.9rem' }} />
+        </Tabs>
+      </Box>
 
-              <TextField
-                select label="State of Registration" name="state" value={form.state}
-                onChange={handleChange} required fullWidth
-                InputProps={{ startAdornment: <BsGeoAlt size={16} color="#999" style={{ marginRight: 8 }} /> }}
-              >
-                {STATES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-              </TextField>
-
-              <FormControl>
-                <FormLabel sx={{ fontWeight: 600, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <BsCardList size={16} /> GST Scheme Type
-                </FormLabel>
-                <RadioGroup name="scheme_type" value={form.scheme_type} onChange={handleChange}>
-                  <Stack spacing={1}>
-                    {[
-                      { value: 'regular', label: 'Regular Scheme', sub: 'Full GST rates; can claim ITC on purchases' },
-                      { value: 'composition', label: 'Composition Scheme', sub: 'Flat low rate (1-6%); cannot claim ITC' },
-                    ].map(({ value, label, sub }) => (
-                      <Box
-                        key={value}
-                        onClick={() => setForm((f) => ({ ...f, scheme_type: value }))}
-                        sx={{
-                          p: 1.5, border: '2px solid', borderRadius: 2, cursor: 'pointer',
-                          borderColor: form.scheme_type === value ? 'primary.main' : 'divider',
-                          bgcolor: form.scheme_type === value ? 'primary.light' + '18' : 'transparent',
-                          transition: 'all 0.15s',
-                        }}
-                      >
-                        <FormControlLabel value={value} control={<Radio size="small" />} label="" sx={{ m: 0, display: 'none' }} />
-                        <Stack direction="row" alignItems="center" spacing={1}>
-                          <Radio value={value} size="small" checked={form.scheme_type === value} sx={{ p: 0 }} />
-                          <Box>
-                            <Typography fontWeight={600} fontSize="0.9rem">{label}</Typography>
-                            <Typography variant="caption" color="text.secondary">{sub}</Typography>
+      {/* ── Tab 0: Predefined Scenarios ── */}
+      {tabValue === 0 && (
+        unassigned.length === 0 ? (
+          <Card sx={{ border: '1px dashed rgba(0,0,0,0.15)', p: 3, textAlign: 'center', borderRadius: 2 }}>
+            <CardContent>
+              <BsBuilding size={48} color="#ccc" style={{ marginBottom: 16 }} />
+              <Typography variant="h6" fontWeight={700} gutterBottom>
+                No Templates Available
+              </Typography>
+              <Typography color="text.secondary" sx={{ mb: 3 }}>
+                No unassigned simulation scenario templates are left in your training institute dashboard.
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                You can head over to the **Create Custom Business** tab to generate your own custom simulation scenario!
+              </Typography>
+            </CardContent>
+          </Card>
+        ) : (
+          <Stack spacing={3}>
+            <Grid container spacing={2.5}>
+              {unassigned.map((biz) => {
+                const isSelected = selectedId === biz.id;
+                return (
+                  <Grid size={{ xs: 12, sm: 6 }} key={biz.id}>
+                    <Card 
+                      onClick={() => setSelectedId(biz.id)}
+                      sx={{
+                        cursor: 'pointer',
+                        border: '2px solid',
+                        borderColor: isSelected ? 'primary.main' : 'divider',
+                        bgcolor: isSelected ? 'rgba(26,60,110,0.03)' : 'background.paper',
+                        boxShadow: isSelected ? '0 8px 24px rgba(26,60,110,0.08)' : 'none',
+                        transition: 'all 0.2s ease',
+                        borderRadius: 2,
+                        '&:hover': {
+                          transform: 'translateY(-2px)',
+                          borderColor: isSelected ? 'primary.main' : 'primary.light',
+                        }
+                      }}
+                    >
+                      <CardContent sx={{ p: 3 }}>
+                        <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                          <Typography variant="h6" fontWeight={700} color="#1a3c6e">
+                            {biz.name}
+                          </Typography>
+                          <Chip 
+                            label={biz.scheme_type === 'regular' ? 'Regular Scheme' : 'Composition Scheme'} 
+                            color={biz.scheme_type === 'regular' ? 'info' : 'warning'} 
+                            size="small" 
+                            sx={{ fontWeight: 700, fontSize: '0.7rem' }}
+                          />
+                        </Stack>
+                        <Divider sx={{ my: 1.5 }} />
+                        <Stack spacing={1} sx={{ fontSize: '0.85rem', color: 'text.secondary' }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span>State:</span>
+                            <strong>{biz.state}</strong>
+                          </Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span>State Code:</span>
+                            <strong>{biz.state_code}</strong>
+                          </Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span>Mock GSTIN:</span>
+                            <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{biz.gstin}</span>
                           </Box>
                         </Stack>
-                      </Box>
-                    ))}
-                  </Stack>
-                </RadioGroup>
-              </FormControl>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                );
+              })}
+            </Grid>
 
-              <Divider />
-
-              <Alert severity="info" variant="outlined" sx={{ fontSize: '0.8rem' }}>
-                <strong>GSTIN Format:</strong> [2-digit state] + [10-char PAN-like] + entity + Z + check
-              </Alert>
-
+            <Box sx={{ textAlign: 'center', mt: 2 }}>
               <Button
-                type="submit" variant="contained" size="large"
-                disabled={loading || !form.name || !form.state}
-                startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <BsBuilding size={18} />}
-                sx={{ py: 1.3, borderRadius: 2 }}
+                variant="contained"
+                size="large"
+                color="primary"
+                disabled={claiming || !selectedId}
+                onClick={handleClaim}
+                startIcon={claiming ? <CircularProgress size={18} color="inherit" /> : <BsPlay size={20} />}
+                sx={{ px: 6, py: 1.5, borderRadius: 3, fontWeight: 700 }}
               >
-                {loading ? 'Registering...' : 'Register & Get GSTIN'}
+                {claiming ? 'Activating Scenario...' : 'Launch Selected Scenario'}
               </Button>
-            </Stack>
-          </form>
-        </CardContent>
-      </Card>
+            </Box>
+          </Stack>
+        )
+      )}
+
+      {/* ── Tab 1: Create Custom Business ── */}
+      {tabValue === 1 && (
+        <Card sx={{ borderRadius: 2 }}>
+          <CardContent sx={{ p: 4 }}>
+            <Box component="form" onSubmit={handleCreateCustom}>
+              <Stack spacing={3}>
+                <Typography variant="h6" fontWeight={700} color="#1a3c6e">
+                  Custom Simulation Parameters
+                </Typography>
+                <Divider />
+
+                <TextField
+                  label="Business Name"
+                  placeholder="e.g. Aadhira Supermarket, TechLabs Solutions"
+                  value={customName}
+                  onChange={(e) => setCustomName(e.target.value)}
+                  fullWidth
+                  required
+                />
+
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <TextField
+                      select
+                      label="State (GST Jurisdiction)"
+                      value={customState}
+                      onChange={(e) => setCustomState(e.target.value)}
+                      fullWidth
+                    >
+                      {INDIAN_STATES.map((st) => (
+                        <MenuItem key={st} value={st}>{st}</MenuItem>
+                      ))}
+                    </TextField>
+                  </Grid>
+
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <TextField
+                      select
+                      label="GST Tax Scheme"
+                      value={customScheme}
+                      onChange={(e) => setCustomScheme(e.target.value)}
+                      fullWidth
+                    >
+                      <MenuItem value="regular">Regular Scheme (Tax Invoice, Collect GST, Claim ITC)</MenuItem>
+                      <MenuItem value="composition">Composition Scheme (Bill of Supply, Flat 1% Rate, No ITC)</MenuItem>
+                    </TextField>
+                  </Grid>
+                </Grid>
+
+                <Alert severity="info" sx={{ mt: 1, borderRadius: 1.5 }}>
+                  <Typography variant="caption" display="block">
+                    <strong>Note:</strong> We will automatically generate a valid 15-digit mock GSTIN matching the state code you selected.
+                    If you choose the **Regular Scheme**, we will pre-seed purchase invoices so you can practice Input Tax Credit matching.
+                  </Typography>
+                </Alert>
+
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 1 }}>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    size="large"
+                    color="primary"
+                    disabled={creating || !customName.trim()}
+                    startIcon={creating ? <CircularProgress size={18} color="inherit" /> : <BsPlusCircle size={18} />}
+                    sx={{ px: 4, py: 1.25, borderRadius: 3, fontWeight: 700 }}
+                  >
+                    {creating ? 'Creating Workspace...' : 'Create & Launch Business'}
+                  </Button>
+                </Box>
+              </Stack>
+            </Box>
+          </CardContent>
+        </Card>
+      )}
     </Box>
   );
 }

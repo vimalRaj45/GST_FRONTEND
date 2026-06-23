@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import Swal from 'sweetalert2';
 import {
   Box, Typography, Card, CardContent, Grid, Stack, Chip, Alert,
   LinearProgress, Button, Divider, Avatar
@@ -7,13 +8,12 @@ import { useNavigate } from 'react-router-dom';
 import {
   BsTrophy, BsCheckCircleFill, BsCircle, BsStars, BsBuilding,
   BsReceipt, BsWallet2, BsCalendarCheck, BsCalculator, BsPatchQuestion,
-  BsFileEarmarkText, BsTruck, BsCardList, BsArrowRight, BsBarChart
+  BsFileEarmarkText, BsTruck, BsCardList, BsArrowRight, BsBarChart, BsBook, BsExclamationCircle
 } from 'react-icons/bs';
 import useProgressStore from '../store/useProgressStore.js';
 import { useAppStore } from '../store/useAppStore.js';
 
 const MODULES = [
-  { key: 'registeredBusiness', label: 'Register a Business', desc: 'Create your simulated GST business', icon: BsBuilding, path: '/register-business', color: '#1a3c6e' },
   { key: 'usedCalculator', label: 'Use GST Calculator', desc: 'Calculate CGST, SGST & IGST', icon: BsCalculator, path: '/calculator', color: '#0288d1' },
   { key: 'createdInvoice', label: 'Create a Tax Invoice', desc: 'Issue your first B2B or B2C invoice', icon: BsReceipt, path: '/invoices/new', color: '#e07b00' },
   { key: 'viewedLedger', label: 'View ITC Ledger', desc: 'Understand input tax credit tracking', icon: BsWallet2, path: '/ledger', color: '#2e7d32' },
@@ -22,7 +22,7 @@ const MODULES = [
   { key: 'filedReturn', label: 'File GSTR-3B', desc: 'Pay net tax and unlock buyer ITC', icon: BsCheckCircleFill, path: '/periods', color: '#2e7d32' },
   { key: 'completedQuiz', label: 'Complete a Quiz', desc: 'Test your GST knowledge', icon: BsPatchQuestion, path: '/quiz', color: '#c62828' },
   { key: 'exploredHsn', label: 'Explore HSN Codes', desc: 'Learn product classification codes', icon: BsCardList, path: '/hsn-explorer', color: '#37474f' },
-  { key: 'generatedEWayBill', label: 'Generate E-Way Bill', desc: 'Simulate goods movement documentation', icon: BsTruck, path: '/ewaybill', color: '#00796b' },
+  { key: 'generatedEWayBill', label: 'Generated E-Way Bill', desc: 'Simulate goods movement documentation', icon: BsTruck, path: '/ewaybill', color: '#00796b' },
 ];
 
 const QUIZ_TOPICS = [
@@ -39,13 +39,13 @@ const QUIZ_TOPICS = [
 ];
 
 const BADGES = [
-  { id: 'first_step', label: 'First Step', desc: 'Registered your first business', icon: '🏢', req: (m) => m.registeredBusiness },
-  { id: 'invoice_master', label: 'Invoice Master', desc: 'Created your first tax invoice', icon: '🧾', req: (m) => m.createdInvoice },
-  { id: 'gst_filer', label: 'GST Filer', desc: 'Successfully filed GSTR-3B', icon: '📋', req: (m) => m.filedReturn },
-  { id: 'quiz_whiz', label: 'Quiz Whiz', desc: 'Completed a quiz with 80%+ accuracy', icon: '🏆', req: (_, acc) => acc >= 80 },
-  { id: 'hsn_expert', label: 'HSN Expert', desc: 'Explored the HSN code library', icon: '🔍', req: (m) => m.exploredHsn },
-  { id: 'logistics_pro', label: 'Logistics Pro', desc: 'Generated an E-Way Bill', icon: '🚚', req: (m) => m.generatedEWayBill },
-  { id: 'gst_master', label: 'GST Master', desc: 'Completed all 10 learning modules', icon: '⭐', req: (m) => Object.values(m).every(Boolean) },
+  { id: 'first_step', label: 'First Step', desc: 'Active business scenario selected', icon: BsBuilding, req: (m, acc, hasBiz) => hasBiz },
+  { id: 'invoice_master', label: 'Invoice Master', desc: 'Created your first tax invoice', icon: BsReceipt, req: (m) => m.createdInvoice },
+  { id: 'gst_filer', label: 'GST Filer', desc: 'Successfully filed GSTR-3B', icon: BsCalendarCheck, req: (m) => m.filedReturn },
+  { id: 'quiz_whiz', label: 'Quiz Whiz', desc: 'Completed a quiz with 80%+ accuracy', icon: BsTrophy, req: (_, acc) => acc >= 80 },
+  { id: 'hsn_expert', label: 'HSN Expert', desc: 'Explored the HSN code library', icon: BsCardList, req: (m) => m.exploredHsn },
+  { id: 'logistics_pro', label: 'Logistics Pro', desc: 'Generated an E-Way Bill', icon: BsTruck, req: (m) => m.generatedEWayBill },
+  { id: 'gst_master', label: 'GST Master', desc: 'Completed all simulated learning modules', icon: BsStars, req: (m) => MODULES.every((mod) => m[mod.key]) },
 ];
 
 function ModuleCard({ module, done }) {
@@ -65,7 +65,7 @@ function ModuleCard({ module, done }) {
       onClick={() => !done && navigate(module.path)}
     >
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-        <Stack direction="row" spacing={1.5} alignItems="flex-start">
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
           <Box sx={{
             p: 1, borderRadius: 1.5, bgcolor: done ? `${module.color}15` : '#f5f5f5',
             flexShrink: 0, display: 'flex',
@@ -73,7 +73,7 @@ function ModuleCard({ module, done }) {
             <Icon size={20} color={done ? module.color : '#999'} />
           </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+            <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <Typography fontWeight={700} fontSize="0.875rem" sx={{ color: done ? module.color : 'text.primary' }}>
                 {module.label}
               </Typography>
@@ -100,7 +100,7 @@ export default function Progress() {
   const moduleProgress = getModuleProgress();
   const overallAccuracy = getOverallAccuracy();
   const topicStats = getTopicStats();
-  const doneBadges = BADGES.filter((b) => b.req(modules, overallAccuracy));
+  const doneBadges = BADGES.filter((b) => b.req(modules, overallAccuracy, !!business));
 
   const totalQuestions = quizAttempts.reduce((s, a) => s + a.total, 0);
   const totalCorrect = quizAttempts.reduce((s, a) => s + a.correct, 0);
@@ -112,8 +112,8 @@ export default function Progress() {
     .sort(([, a], [, b]) => (a.correct / a.total) - (b.correct / b.total))[0];
 
   return (
-    <Box maxWidth={1000} mx="auto">
-      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
+    <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 3 }}>
         <BsTrophy size={26} color="#e07b00" />
         <Box>
           <Typography variant="h4" fontWeight={800} sx={{ fontSize: { xs: '1.3rem', md: '1.8rem' } }}>
@@ -128,7 +128,7 @@ export default function Progress() {
       {/* Hero Stats */}
       <Grid container spacing={{ xs: 1.5, md: 2 }} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <Card sx={{ background: 'linear-gradient(135deg,#1a3c6e,#2d5fa0)', color: 'white', height: '100%' }}>
+          <Card sx={{ bgcolor: '#1a3c6e', color: 'white', height: '100%' }}>
             <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
               <Typography variant="caption" sx={{ opacity: 0.75 }}>Overall Progress</Typography>
               <Typography variant="h2" fontWeight={900} sx={{ fontSize: { xs: '2.5rem', md: '3rem' }, my: 1 }}>{moduleProgress}%</Typography>
@@ -176,15 +176,15 @@ export default function Progress() {
       {(nextModule || weakTopic) && (
         <Card sx={{ mb: 3, border: '2px solid #1a3c6e30', bgcolor: '#f0f4ff' }}>
           <CardContent sx={{ p: 2.5 }}>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+            <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1.5 }}>
               <BsStars size={18} color="#e07b00" />
               <Typography fontWeight={700} color="#1a3c6e">What to Learn Next</Typography>
             </Stack>
             <Stack spacing={1.5}>
               {nextModule && (
-                <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' } }} spacing={1}>
                   <Box>
-                    <Typography fontWeight={600} fontSize="0.9rem">📚 Next Module: {nextModule.label}</Typography>
+                    <Typography fontWeight={600} fontSize="0.9rem" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><BsBook size={16} /> Next Module: {nextModule.label}</Typography>
                     <Typography variant="caption" color="text.secondary">{nextModule.desc}</Typography>
                   </Box>
                   <Button size="small" variant="contained" endIcon={<BsArrowRight size={13} />}
@@ -194,9 +194,9 @@ export default function Progress() {
                 </Stack>
               )}
               {weakTopic && (
-                <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' } }} spacing={1}>
                   <Box>
-                    <Typography fontWeight={600} fontSize="0.9rem">🎯 Needs Practice: {weakTopic[0].split('—')[0].trim()}</Typography>
+                    <Typography fontWeight={600} fontSize="0.9rem" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><BsExclamationCircle size={16} /> Needs Practice: {weakTopic[0].split('—')[0].trim()}</Typography>
                     <Typography variant="caption" color="text.secondary">
                       You scored {weakTopic[1].correct}/{weakTopic[1].total} — try more questions on this topic
                     </Typography>
@@ -233,7 +233,7 @@ export default function Progress() {
             <CardContent sx={{ p: 2.5 }}>
               <Grid container spacing={1.5}>
                 {BADGES.map((badge) => {
-                  const earned = badge.req(modules, overallAccuracy);
+                  const earned = badge.req(modules, overallAccuracy, !!business);
                   return (
                     <Grid size={{ xs: 6 }} key={badge.id}>
                       <Box sx={{
@@ -243,7 +243,12 @@ export default function Progress() {
                         opacity: earned ? 1 : 0.45,
                         transition: 'all 0.2s',
                       }}>
-                        <Typography fontSize="1.8rem" sx={{ mb: 0.5 }}>{badge.icon}</Typography>
+                        <Box sx={{ mb: 1, display: 'flex', justifyContent: 'center' }}>
+                          {(() => {
+                            const IconComponent = badge.icon;
+                            return <IconComponent size={28} color={earned ? '#e07b00' : '#999'} />;
+                          })()}
+                        </Box>
                         <Typography fontWeight={700} fontSize="0.75rem" sx={{ color: earned ? '#e07b00' : 'text.secondary' }}>{badge.label}</Typography>
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.3, fontSize: '0.65rem' }}>{badge.desc}</Typography>
                       </Box>
@@ -275,7 +280,7 @@ export default function Progress() {
                     const color = accuracy >= 80 ? '#2e7d32' : accuracy >= 50 ? '#e07b00' : '#c62828';
                     return (
                       <Box key={topic}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+                        <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
                           <Typography variant="caption" fontWeight={600} sx={{ maxWidth: '75%' }}>{topic.split('—')[0].trim()}</Typography>
                           <Typography variant="caption" fontWeight={700} sx={{ color }}>{accuracy}%</Typography>
                         </Stack>
@@ -295,7 +300,22 @@ export default function Progress() {
           <Button
             size="small" color="error" variant="outlined"
             sx={{ mt: 2, fontSize: '0.75rem' }}
-            onClick={() => { if (confirm('Reset all progress?')) resetProgress(); }}
+            onClick={() => {
+              Swal.fire({
+                title: 'Reset all progress?',
+                text: 'This will reset your learning modules and quiz statistics!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#1a3c6e',
+                confirmButtonText: 'Yes, reset it!'
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  resetProgress();
+                  Swal.fire('Reset!', 'Your progress has been reset.', 'success');
+                }
+              });
+            }}
           >
             Reset Progress
           </Button>

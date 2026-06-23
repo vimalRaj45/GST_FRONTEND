@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Box, Typography, Table, TableBody, TableCell, TableHead, TableRow,
   Button, Alert, CircularProgress, Card, Stack, Snackbar, useMediaQuery, useTheme
@@ -13,6 +13,7 @@ import { useAppStore } from '../store/useAppStore.js';
 import ExplainerCallout from '../components/ExplainerCallout.jsx';
 import StatusChip from '../components/StatusChip.jsx';
 import useProgressStore from '../store/useProgressStore.js';
+import { usePolling } from '../hooks/usePolling.js';
 
 export default function Periods() {
   const navigate = useNavigate();
@@ -26,12 +27,13 @@ export default function Periods() {
   const [closingId, setClosingId] = useState(null);
   const [snack, setSnack] = useState({ open: false, message: '', severity: 'info' });
 
-  const loadPeriods = () => {
+  const loadPeriods = useCallback(() => {
     if (!business?.id) return;
     setLoading(true);
     getPeriods(business.id).then(setPeriods).catch((e) => setError(e.message)).finally(() => setLoading(false));
-  };
-  useEffect(loadPeriods, [business?.id]);
+  }, [business?.id]);
+
+  usePolling(loadPeriods, 30000, !!business?.id);
 
   const handleClose = async (period) => {
     setClosingId(period.id);
@@ -52,7 +54,7 @@ export default function Periods() {
     }
   };
 
-  if (!business) return <Alert severity="warning">Please register a business first.</Alert>;
+  if (!business) return <Alert severity="warning">Please select a simulated business scenario first.</Alert>;
 
   return (
     <Box>

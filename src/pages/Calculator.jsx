@@ -12,7 +12,7 @@ import { calculateGST } from '../api/client.js';
 import ExplainerCallout from '../components/ExplainerCallout.jsx';
 import useProgressStore from '../store/useProgressStore.js';
 
-const TAX_RATES = [0, 5, 12, 18, 28];
+const TAX_RATES = [0, 5, 18, 40];
 const TRANSACTION_TYPES = [
   { value: 'regular', label: 'Regular (B2B / B2C)' },
   { value: 'export', label: 'Export (Zero-rated, ITC claimable)' },
@@ -39,7 +39,7 @@ function TaxCard({ label, value, color = '#1a3c6e', highlight = false }) {
     <Box
       sx={{
         textAlign: 'center', p: { xs: 1.5, md: 2 }, borderRadius: 2,
-        background: highlight ? 'linear-gradient(135deg,#1a3c6e,#2d5fa0)' : '#fff',
+        background: highlight ? '#1a3c6e' : '#fff',
         border: highlight ? 'none' : '1.5px solid #e0e0e0',
         color: highlight ? 'white' : 'inherit',
         transition: 'all 0.3s',
@@ -189,8 +189,8 @@ export default function Calculator() {
                   </TextField>
 
                   {form.transactionType === 'composition' ? (
-                    <Box sx={{ p: 2, bgcolor: '#fff8e1', border: '2px solid #f57f1730', borderRadius: 2 }}>
-                      <Typography fontWeight={700} fontSize="0.875rem" color="#f57f17" sx={{ mb: 1 }}>
+                    <Box sx={{ p: 2, bgcolor: '#eff6ff', border: '2px solid rgba(26,60,110,0.15)', borderRadius: 2 }}>
+                      <Typography fontWeight={700} fontSize="0.875rem" color="#1a3c6e" sx={{ mb: 1 }}>
                         🏪 Composition Scheme
                       </Typography>
                       <Typography variant="caption" color="text.secondary" sx={{ mb: 1.5, display: 'block' }}>

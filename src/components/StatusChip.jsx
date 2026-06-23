@@ -19,6 +19,8 @@ const STATUS_CONFIG = {
   bill_of_supply: { label: 'Bill of Supply', color: 'default' },
   credit_note: { label: 'Credit Note', color: 'error' },
   debit_note: { label: 'Debit Note', color: 'warning' },
+  quotation: { label: 'Quotation', color: 'info' },
+  delivery_challan: { label: 'Delivery Challan', color: 'secondary' },
   // Transaction types
   regular_tx: { label: 'Regular', color: 'default' },
   export: { label: 'Export', color: 'info' },

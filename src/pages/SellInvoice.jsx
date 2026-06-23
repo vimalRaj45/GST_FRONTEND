@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import {
   BsPlusCircle, BsTrash, BsReceiptCutoff, BsArrowLeft, BsArrowRight,
-  BsCheckCircle, BsGlobe, BsGeoAlt, BsSearch, BsShop
+  BsCheckCircle, BsGlobe, BsGeoAlt, BsSearch, BsShop, BsBoxArrowUp, BsBoxArrowInDown
 } from 'react-icons/bs';
 import { useNavigate } from 'react-router-dom';
 import { createInvoice, getHsnCodes, listBusinesses, getPeriods } from '../api/client.js';
@@ -17,18 +17,10 @@ import useProgressStore from '../store/useProgressStore.js';
 
 const TAX_RATES = [0, 5, 18, 40];
 const INVOICE_TYPES = [
-  { value: 'tax_invoice',     label: 'Tax Invoice' },
-  { value: 'bill_of_supply',  label: 'Bill of Supply (Composition/Exempt)' },
-  { value: 'credit_note',     label: 'Credit Note' },
-  { value: 'debit_note',      label: 'Debit Note' },
-];
-const DOCUMENT_TYPES = [
-  { value: 'tax_invoice',      label: 'Tax Invoice' },
-  { value: 'bill_of_supply',   label: 'Bill of Supply' },
-  { value: 'quotation',        label: 'Quotation' },
-  { value: 'delivery_challan', label: 'Delivery Challan' },
-  { value: 'credit_note',      label: 'Credit Note' },
-  { value: 'debit_note',       label: 'Debit Note' },
+  { value: 'tax_invoice',    label: 'Tax Invoice' },
+  { value: 'bill_of_supply', label: 'Bill of Supply (Composition/Exempt)' },
+  { value: 'credit_note',    label: 'Credit Note' },
+  { value: 'debit_note',     label: 'Debit Note' },
 ];
 const TX_TYPES = [
   { value: 'regular',        label: 'Regular' },
@@ -39,7 +31,10 @@ const TX_TYPES = [
 
 const defaultItem = () => ({
   item_name: '', hsn_code_id: null, hsn_code: '', qty: 1,
-  unit_price: 0, tax_rate: 18, transaction_type: 'regular', _key: typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Math.random().toString(36).substring(2, 9),
+  unit_price: 0, tax_rate: 18, transaction_type: 'regular',
+  _key: typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : Math.random().toString(36).substring(2, 9),
 });
 
 function calcItemTax(item, isInterstate) {
@@ -53,17 +48,19 @@ function calcItemTax(item, isInterstate) {
   return { taxable, cgst: half, sgst: half, igst: 0, total: taxable + tax };
 }
 
-export default function InvoiceNew() {
+export default function SellInvoice() {
   const navigate = useNavigate();
   const { business, sessionId } = useAppStore();
   const { markModule } = useProgressStore();
   const isComposition = business?.scheme_type === 'composition';
+
   const [step, setStep] = useState(0);
   const [header, setHeader] = useState({
     buyer_business_id: '',
     invoice_type: isComposition ? 'bill_of_supply' : 'tax_invoice',
-    document_type: isComposition ? 'bill_of_supply' : 'tax_invoice',
-    transaction_type: 'regular', tax_period_id: '', notes: '',
+    transaction_type: 'regular',
+    tax_period_id: '',
+    notes: '',
   });
   const [items, setItems] = useState([defaultItem()]);
   const [buyers, setBuyers] = useState([]);
@@ -85,17 +82,6 @@ export default function InvoiceNew() {
     }
   }, [business?.id, sessionId]);
 
-  useEffect(() => {
-    if (business) {
-      const isComp = business.scheme_type === 'composition';
-      setHeader((h) => ({
-        ...h,
-        invoice_type: isComp ? 'bill_of_supply' : 'tax_invoice',
-        document_type: isComp ? 'bill_of_supply' : 'tax_invoice',
-      }));
-    }
-  }, [business]);
-
   const selectedBuyer = buyers.find((b) => b.id === header.buyer_business_id);
   const isInterstate = business && selectedBuyer ? business.state_code !== selectedBuyer.state_code : false;
 
@@ -116,22 +102,22 @@ export default function InvoiceNew() {
   const removeItem = (key) => setItems((prev) => prev.filter((it) => it._key !== key));
 
   const handleSubmit = async () => {
-    const docType = header.document_type || (isComposition ? 'bill_of_supply' : 'tax_invoice');
-    let invType = docType;
-    if (docType === 'quotation' || docType === 'delivery_challan') {
-      invType = isComposition ? 'bill_of_supply' : 'tax_invoice';
-    }
-
+    if (!business) { setError('Please select a simulated business scenario first'); return; }
+    setSubmitting(true); setError(null);
     try {
       const res = await createInvoice({
         seller_business_id: business.id,
         buyer_business_id: header.buyer_business_id || null,
         tax_period_id: header.tax_period_id,
-        invoice_type: invType,
-        document_type: docType,
+        invoice_type: header.invoice_type,
         transaction_type: header.transaction_type,
         notes: header.notes || null,
-        items: items.map((it) => ({ item_name: it.item_name, hsn_code_id: it.hsn_code_id || null, hsn_code: it.hsn_code || null, qty: Number(it.qty), unit_price: Number(it.unit_price), tax_rate: Number(it.tax_rate), transaction_type: it.transaction_type })),
+        items: items.map((it) => ({
+          item_name: it.item_name, hsn_code_id: it.hsn_code_id || null,
+          hsn_code: it.hsn_code || null, qty: Number(it.qty),
+          unit_price: Number(it.unit_price), tax_rate: Number(it.tax_rate),
+          transaction_type: it.transaction_type,
+        })),
       });
       setCreatedInvoice(res);
       setStep(3);
@@ -151,25 +137,63 @@ export default function InvoiceNew() {
 
   return (
     <Box>
-      {/* Composition Scheme Banner */}
+      {/* ── Sell / Purchase Toggle ── */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+        <Box sx={{
+          display: 'inline-flex', borderRadius: 3, p: 0.5,
+          bgcolor: '#f1f5f9', border: '1px solid #e2e8f0',
+        }}>
+          <Box sx={{
+            px: 3, py: 1, borderRadius: 2.5, fontWeight: 700, fontSize: '0.9rem',
+            bgcolor: '#065f46', color: 'white', cursor: 'default',
+            display: 'flex', alignItems: 'center', gap: 1,
+          }}>
+            <BsBoxArrowUp size={16} /> Sell Invoice
+          </Box>
+          <Box
+            onClick={() => navigate('/invoices/purchase')}
+            sx={{
+              px: 3, py: 1, borderRadius: 2.5, fontWeight: 600, fontSize: '0.9rem',
+              color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 1,
+              transition: 'all 0.2s',
+              '&:hover': { bgcolor: '#e2e8f0', color: '#1e3a8a' },
+            }}>
+            <BsBoxArrowInDown size={16} /> Purchase Invoice
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Header Banner */}
+      <Box sx={{
+        background: 'linear-gradient(135deg, #064e3b 0%, #065f46 50%, #047857 100%)',
+        color: 'white', borderRadius: 2, p: { xs: 2.5, md: 3 }, mb: 3,
+        display: 'flex', alignItems: 'center', gap: 2,
+      }}>
+        <BsBoxArrowUp size={28} />
+        <Box>
+          <Typography variant="h5" fontWeight={800}>Sell — Outward Supply Invoice</Typography>
+          <Typography variant="body2" sx={{ opacity: 0.85 }}>
+            You are the <strong>Seller</strong>. Record goods/services sold and collect GST from your buyer.
+          </Typography>
+        </Box>
+      </Box>
+
       {isComposition && (
         <Alert severity="warning" sx={{ mb: 3 }}>
           <Typography fontWeight={700} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><BsShop size={18} /> Composition Scheme — Restricted Invoice Mode</Typography>
           <Typography variant="body2" sx={{ mt: 0.5 }}>
             <strong>{business.name}</strong> is on the Composition Scheme.
-            You can only issue <strong>Bill of Supply</strong> (not Tax Invoices).
-            You <strong>cannot collect GST from buyers</strong>, and buyers <strong>cannot claim ITC</strong> from your invoices.
-            Your flat GST rate is paid directly to the government on your total turnover.
+            You can only issue <strong>Bill of Supply</strong>. You <strong>cannot collect GST from buyers</strong>.
           </Typography>
         </Alert>
       )}
 
-      <ExplainerCallout title="Creating a Tax Invoice">
-        A Tax Invoice is the core GST document — it records the sale, calculates tax, and creates an ITC entry for the
-        buyer. Intra-state = CGST + SGST. Inter-state = IGST. All items and ITC entries are saved atomically.
+      <ExplainerCallout title="Outward Supply (Sale)">
+        When you sell, issue a Tax Invoice collecting CGST+SGST (intra-state) or IGST (inter-state) from the buyer.
+        This creates an ITC entry for the buyer and adds to your GST liability for the period.
       </ExplainerCallout>
 
-      {/* Responsive Stepper */}
+      {/* Stepper */}
       <Box sx={{ mb: 3 }}>
         <Stepper activeStep={step} alternativeLabel>
           {['Header', 'Items', 'Review', 'Done'].map((label) => (
@@ -184,7 +208,7 @@ export default function InvoiceNew() {
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-      {/* ── Step 0: Header ── */}
+      {/* Step 0: Header */}
       {step === 0 && (
         <Card>
           <CardContent sx={{ p: { xs: 2, md: 3 } }}>
@@ -203,12 +227,12 @@ export default function InvoiceNew() {
                 </TextField>
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField select label="Document Type" value={header.document_type}
-                  onChange={(e) => setHeader((h) => ({ ...h, document_type: e.target.value }))} fullWidth
-                  helperText={isComposition ? 'Composition dealers cannot issue Tax Invoices' : ''}
-                >
-                  {DOCUMENT_TYPES
-                    .filter((t) => isComposition ? t.value !== 'tax_invoice' : t.value !== 'bill_of_supply')
+                <TextField select label="Invoice Type" value={header.invoice_type}
+                  onChange={(e) => setHeader((h) => ({ ...h, invoice_type: e.target.value }))} fullWidth
+                  disabled={isComposition}
+                  helperText={isComposition ? 'Composition dealers can only issue Bill of Supply' : ''}>
+                  {INVOICE_TYPES
+                    .filter((t) => !isComposition || t.value === 'bill_of_supply')
                     .map((t) => <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>)
                   }
                 </TextField>
@@ -220,9 +244,7 @@ export default function InvoiceNew() {
                 </TextField>
                 {header.transaction_type === 'reverse_charge' && (
                   <Alert severity="info" sx={{ mt: 1, fontSize: '0.78rem' }}>
-                    <strong>RCM (Reverse Charge):</strong> The <em>buyer</em> pays GST directly to the government,
-                    not the seller. The buyer self-reports this tax in GSTR-3B Table 3.1(d) and can claim ITC on it.
-                    Common for: legal services, GTA, security services.
+                    <strong>RCM:</strong> The buyer pays GST directly. Common for legal services, GTA, security services.
                   </Alert>
                 )}
               </Grid>
@@ -247,7 +269,8 @@ export default function InvoiceNew() {
               </Grid>
             </Grid>
             <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-              <Button variant="contained" endIcon={<BsArrowRight />} onClick={() => setStep(1)} disabled={!header.tax_period_id}>
+              <Button variant="contained" color="success" endIcon={<BsArrowRight />}
+                onClick={() => setStep(1)} disabled={!header.tax_period_id}>
                 Line Items
               </Button>
             </Box>
@@ -255,19 +278,19 @@ export default function InvoiceNew() {
         </Card>
       )}
 
-      {/* ── Step 1: Items ── */}
+      {/* Step 1: Items */}
       {step === 1 && (
         <Card>
           <CardContent sx={{ p: { xs: 2, md: 3 } }}>
             <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 1 }}>
-              <Typography variant="h5" fontWeight={700}>Line Items</Typography>
-              <Button startIcon={<BsPlusCircle size={16} />} onClick={addItem} variant="outlined" size="small">Add Item</Button>
+              <Typography variant="h5" fontWeight={700}>Items Being Sold</Typography>
+              <Button startIcon={<BsPlusCircle size={16} />} onClick={addItem} variant="outlined" color="success" size="small">Add Item</Button>
             </Stack>
             <Stack spacing={2.5}>
               {items.map((item, idx) => {
                 const t = calcItemTax(item, isInterstate);
                 return (
-                  <Card key={item._key} variant="outlined">
+                  <Card key={item._key} variant="outlined" sx={{ borderColor: 'success.light' }}>
                     <CardContent sx={{ p: { xs: 1.5, md: 2 } }}>
                       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
                         <Typography fontWeight={700} fontSize="0.9rem">Item #{idx + 1}</Typography>
@@ -303,9 +326,9 @@ export default function InvoiceNew() {
                             onChange={(e) => updateItem(item._key, 'unit_price', e.target.value)} />
                         </Grid>
                         <Grid size={{ xs: 12, sm: 4 }}>
-                          <TextField select label="Rate" value={item.tax_rate} size="small" fullWidth
+                          <TextField select label="GST Rate" value={item.tax_rate} size="small" fullWidth
                             onChange={(e) => updateItem(item._key, 'tax_rate', Number(e.target.value))}>
-                            {TAX_RATES.map((r) => <MenuItem key={r} value={r}>{r}%</MenuItem>)}
+                            {TAX_RATES.map((r) => <MenuItem key={r} value={r}>{r}%{r === 40 ? ' — Luxury/Sin' : ''}</MenuItem>)}
                           </TextField>
                         </Grid>
                       </Grid>
@@ -323,7 +346,7 @@ export default function InvoiceNew() {
             </Stack>
             <Stack direction="row" justifyContent="space-between" sx={{ mt: 3 }}>
               <Button startIcon={<BsArrowLeft />} onClick={() => setStep(0)}>Back</Button>
-              <Button variant="contained" endIcon={<BsArrowRight />} onClick={() => setStep(2)}
+              <Button variant="contained" color="success" endIcon={<BsArrowRight />} onClick={() => setStep(2)}
                 disabled={items.some((it) => !it.item_name || it.unit_price <= 0)}>
                 Review
               </Button>
@@ -332,15 +355,15 @@ export default function InvoiceNew() {
         </Card>
       )}
 
-      {/* ── Step 2: Review ── */}
+      {/* Step 2: Review */}
       {step === 2 && (
         <Card>
           <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-            <Typography variant="h5" fontWeight={700} sx={{ mb: 3 }}>Review Invoice</Typography>
+            <Typography variant="h5" fontWeight={700} sx={{ mb: 3 }}>Review Sell Invoice</Typography>
             <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid size={6}><Typography color="text.secondary" fontSize="0.8rem">Seller</Typography><Typography fontWeight={600}>{business.name}</Typography></Grid>
+              <Grid size={6}><Typography color="text.secondary" fontSize="0.8rem">Seller (You)</Typography><Typography fontWeight={600}>{business.name}</Typography></Grid>
               <Grid size={6}><Typography color="text.secondary" fontSize="0.8rem">Buyer</Typography><Typography fontWeight={600}>{selectedBuyer?.name || 'B2C'}</Typography></Grid>
-              <Grid size={6}><Typography color="text.secondary" fontSize="0.8rem">Type</Typography><StatusChip status={header.document_type} /></Grid>
+              <Grid size={6}><Typography color="text.secondary" fontSize="0.8rem">Type</Typography><StatusChip status={header.invoice_type} /></Grid>
               <Grid size={6}>
                 <Typography color="text.secondary" fontSize="0.8rem">Tax Mode</Typography>
                 <Stack direction="row" alignItems="center" spacing={0.5}>
@@ -350,7 +373,6 @@ export default function InvoiceNew() {
               </Grid>
             </Grid>
             <Divider sx={{ mb: 2 }} />
-            {/* Mobile-friendly table — scrollable */}
             <Box sx={{ overflowX: 'auto' }}>
               <Table size="small" sx={{ minWidth: 480 }}>
                 <TableHead>
@@ -383,7 +405,7 @@ export default function InvoiceNew() {
                     <TableCell align="right">₹{totals.cgst.toFixed(2)}</TableCell>
                     <TableCell align="right">₹{totals.sgst.toFixed(2)}</TableCell>
                     <TableCell align="right">₹{totals.igst.toFixed(2)}</TableCell>
-                    <TableCell align="right" sx={{ color: 'primary.main', fontSize: '1rem' }}>₹{totals.total.toFixed(2)}</TableCell>
+                    <TableCell align="right" sx={{ color: 'success.dark', fontSize: '1rem' }}>₹{totals.total.toFixed(2)}</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
@@ -393,23 +415,25 @@ export default function InvoiceNew() {
               <Button variant="contained" color="success" onClick={handleSubmit}
                 disabled={submitting}
                 startIcon={submitting ? <CircularProgress size={16} color="inherit" /> : <BsCheckCircle size={16} />}>
-                {submitting ? 'Creating...' : 'Create Invoice'}
+                {submitting ? 'Creating...' : 'Create Sell Invoice'}
               </Button>
             </Stack>
           </CardContent>
         </Card>
       )}
 
-      {/* ── Step 3: Done ── */}
+      {/* Step 3: Done */}
       {step === 3 && createdInvoice && (
         <Card sx={{ textAlign: 'center' }}>
           <CardContent sx={{ p: { xs: 3, md: 4 } }}>
-            <BsCheckCircle size={64} color="#2e7d32" style={{ marginBottom: 16 }} />
-            <Typography variant="h4" fontWeight={700} color="success.main" gutterBottom>Invoice Created!</Typography>
+            <BsCheckCircle size={64} color="#16a34a" style={{ marginBottom: 16 }} />
+            <Typography variant="h4" fontWeight={700} color="success.dark" gutterBottom>Sell Invoice Created!</Typography>
             <Typography variant="h6" color="text.secondary" sx={{ mb: 3 }}>{createdInvoice.invoice?.invoice_number}</Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center">
-              <Button variant="contained" startIcon={<BsReceiptCutoff size={16} />} onClick={() => navigate(`/invoices/${createdInvoice.invoice?.id}`)}>View Invoice</Button>
-              <Button variant="outlined" startIcon={<BsArrowLeft size={16} />} onClick={() => { setStep(0); setItems([defaultItem()]); setCreatedInvoice(null); }}>Create Another</Button>
+              <Button variant="contained" color="success" startIcon={<BsReceiptCutoff size={16} />}
+                onClick={() => navigate(`/invoices/${createdInvoice.invoice?.id}`)}>View Invoice</Button>
+              <Button variant="outlined" startIcon={<BsArrowLeft size={16} />}
+                onClick={() => { setStep(0); setItems([defaultItem()]); setCreatedInvoice(null); }}>Create Another</Button>
             </Stack>
           </CardContent>
         </Card>

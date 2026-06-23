@@ -128,7 +128,7 @@ export default function HsnExplorer() {
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
           {codes.length === 0 && !loading && (
-            <Typography color="text.secondary" textAlign="center" py={4}>No codes found. Try a different search.</Typography>
+            <Typography color="text.secondary" align="center" sx={{ py: 4 }}>No codes found. Try a different search.</Typography>
           )}
 
           <Stack spacing={1.5}>

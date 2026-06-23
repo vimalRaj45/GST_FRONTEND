@@ -99,7 +99,7 @@ export default function Gstr1View() {
     return Object.values(map);
   }, [invoices]);
 
-  if (!business) return <Alert severity="warning">Please register a business first.</Alert>;
+  if (!business) return <Alert severity="warning">Please select a simulated business scenario first.</Alert>;
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}><CircularProgress /></Box>;
   if (error) return <Alert severity="error">{error}</Alert>;
 
@@ -243,7 +243,7 @@ export default function Gstr1View() {
                 <strong>B2B invoices</strong> are auto-populated in your buyer's GSTR-2A. Buyer can claim ITC only after you file this return.
               </Alert>
               {b2b.length === 0 ? (
-                <Typography color="text.secondary" textAlign="center" py={4}>No B2B invoices in this period.</Typography>
+                <Typography color="text.secondary" align="center" sx={{ py: 4 }}>No B2B invoices in this period.</Typography>
               ) : (
                 <Box sx={{ overflowX: 'auto' }}>
                   <Table size="small">
@@ -288,7 +288,7 @@ export default function Gstr1View() {
                 <strong>B2C (retail) invoices</strong> are consolidated in GSTR-1 as a lump sum. Buyers cannot claim ITC.
               </Alert>
               {b2c.length === 0 ? (
-                <Typography color="text.secondary" textAlign="center" py={4}>No B2C invoices in this period.</Typography>
+                <Typography color="text.secondary" align="center" sx={{ py: 4 }}>No B2C invoices in this period.</Typography>
               ) : (
                 <Box sx={{ overflowX: 'auto' }}>
                   <Table size="small">
@@ -334,7 +334,7 @@ export default function Gstr1View() {
                 claim ITC on inputs used to make the exported goods.
               </Alert>
               {exportInv.length === 0 ? (
-                <Typography color="text.secondary" textAlign="center" py={4}>No export invoices in this period.</Typography>
+                <Typography color="text.secondary" align="center" sx={{ py: 4 }}>No export invoices in this period.</Typography>
               ) : (
                 exportInv.map((inv) => (
                   <Box key={inv.id} sx={{ p: 2, border: '1.5px solid #0288d130', borderRadius: 2, mb: 1.5 }}>
@@ -365,7 +365,7 @@ export default function Gstr1View() {
                 It groups your supplies by HSN code and shows the rate-wise tax breakdown.
               </Alert>
               {hsnSummary.length === 0 ? (
-                <Typography color="text.secondary" textAlign="center" py={4}>No HSN data available.</Typography>
+                <Typography color="text.secondary" align="center" sx={{ py: 4 }}>No HSN data available.</Typography>
               ) : (
                 <Box sx={{ overflowX: 'auto' }}>
                   <Table size="small">

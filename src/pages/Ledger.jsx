@@ -5,16 +5,19 @@ import {
   Skeleton, Card
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-import { BsStars, BsWallet2, BsXCircle } from 'react-icons/bs';
+import { BsStars, BsWallet2, BsXCircle, BsShop } from 'react-icons/bs';
+import { useNavigate } from 'react-router-dom';
 import { getITCSummary, getPeriods, explainITCStatus } from '../api/client.js';
 import { useAppStore } from '../store/useAppStore.js';
 import ExplainerCallout from '../components/ExplainerCallout.jsx';
 import StatusChip from '../components/StatusChip.jsx';
 import useProgressStore from '../store/useProgressStore.js';
+import { usePolling } from '../hooks/usePolling.js';
 
 export default function Ledger() {
   const { business } = useAppStore();
   const { markModule } = useProgressStore();
+  const navigate = useNavigate();
   const [periods, setPeriods] = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [summary, setSummary] = useState(null);
@@ -26,22 +29,23 @@ export default function Ledger() {
 
   useEffect(() => { markModule('viewedLedger'); }, []);
 
-  useEffect(() => {
-    if (business?.id) {
-      getPeriods(business.id).then((p) => {
-        setPeriods(p);
-        const open = p.find((x) => x.status === 'open');
-        if (open) setSelectedPeriod(open.id);
-      }).catch(() => {});
-    }
+  const fetchPeriods = useCallback(() => {
+    if (!business?.id) return;
+    getPeriods(business.id).then((p) => {
+      setPeriods(p);
+      const open = p.find((x) => x.status === 'open');
+      if (open) setSelectedPeriod((prev) => prev || open.id);
+    }).catch(() => {});
   }, [business?.id]);
 
-  useEffect(() => {
-    if (business?.id && selectedPeriod) {
-      setLoading(true); setError(null);
-      getITCSummary(business.id, selectedPeriod).then(setSummary).catch((e) => setError(e.message)).finally(() => setLoading(false));
-    }
+  const fetchSummary = useCallback(() => {
+    if (!business?.id || !selectedPeriod) return;
+    setLoading(true); setError(null);
+    getITCSummary(business.id, selectedPeriod).then(setSummary).catch((e) => setError(e.message)).finally(() => setLoading(false));
   }, [business?.id, selectedPeriod]);
+
+  usePolling(fetchPeriods, 30000, !!business?.id);
+  usePolling(fetchSummary, 30000, !!(business?.id && selectedPeriod));
 
   const handleExplain = useCallback(async (entryId) => {
     setExplainDialog({ open: true, entryId }); setExplanation(null); setExplaining(true);
@@ -50,7 +54,7 @@ export default function Ledger() {
     finally { setExplaining(false); }
   }, []);
 
-  if (!business) return <Alert severity="warning" action={<Button href="/register">Register</Button>}>Please register a business first.</Alert>;
+  if (!business) return <Alert severity="warning" action={<Button href="/register-business">Choose Business</Button>}>Please select a simulated business scenario first.</Alert>;
 
   // Composition scheme warning
   const isComposition = business.scheme_type === 'composition';
@@ -60,7 +64,32 @@ export default function Ledger() {
       field: 'entry_type', headerName: 'Type', width: 100,
       renderCell: (p) => <Chip label={p.value === 'input' ? '⬇ Input' : '⬆ Output'} size="small" color={p.value === 'input' ? 'success' : 'primary'} />,
     },
-    { field: 'invoice_number', headerName: 'Invoice #', width: 155 },
+    {
+      field: 'invoice_number',
+      headerName: 'Invoice #',
+      width: 155,
+      renderCell: (p) => {
+        if (!p.row.source_invoice_id) return p.value || '—';
+        return (
+          <Button
+            size="small"
+            variant="text"
+            onClick={() => navigate(`/invoices/${p.row.source_invoice_id}`)}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 700,
+              p: 0,
+              minWidth: 'auto',
+              textAlign: 'left',
+              color: 'primary.main',
+              '&:hover': { textDecoration: 'underline' }
+            }}
+          >
+            {p.value}
+          </Button>
+        );
+      }
+    },
     { field: 'seller_name', headerName: 'Seller', flex: 1, minWidth: 130 },
     { field: 'buyer_name',  headerName: 'Buyer',  flex: 1, minWidth: 130 },
     { field: 'amount',      headerName: 'Tax (₹)', width: 120, type: 'number', valueFormatter: (v) => `₹${Number(v || 0).toFixed(2)}` },
@@ -92,7 +121,7 @@ export default function Ledger() {
     <Box>
       {isComposition && (
         <Alert severity="warning" sx={{ mb: 3, '& .MuiAlert-message': { width: '100%' } }}>
-          <Typography fontWeight={700}>🏪 Composition Scheme — ITC Not Claimable</Typography>
+          <Typography fontWeight={700} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><BsShop size={18} /> Composition Scheme — ITC Not Claimable</Typography>
           <Typography variant="body2" sx={{ mt: 0.5 }}>
             <strong>{business.name}</strong> is registered under the <strong>Composition Scheme</strong>.
             Composition dealers <strong>cannot claim Input Tax Credit</strong> on purchases.

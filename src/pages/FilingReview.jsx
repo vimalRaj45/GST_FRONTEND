@@ -43,7 +43,7 @@ export default function FilingReview() {
     }
   };
 
-  if (!business) return <Alert severity="warning">Please register a business first.</Alert>;
+  if (!business) return <Alert severity="warning">Please select a simulated business scenario first.</Alert>;
   if (loading)   return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}><CircularProgress /></Box>;
   if (error && !preview) return <Alert severity="error">{error}</Alert>;
 

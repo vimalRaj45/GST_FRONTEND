@@ -8,6 +8,7 @@ import {
 } from 'react-icons/bs';
 import { tutorChat } from '../api/client.js';
 import { useAppStore } from '../store/useAppStore.js';
+import { useGuideStore } from '../store/useGuideStore.js';
 
 const LOGO_URL = '/logo.png';
 
@@ -32,7 +33,7 @@ export default function TutorWidget() {
   const muiTheme = useTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('sm'));
   const { sessionId, business } = useAppStore();
-  const [open, setOpen] = useState(false);
+  const { tutorDrawerOpen: open, setTutorDrawerOpen: setOpen, guideDrawerOpen, active: guideActive } = useGuideStore();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -80,12 +81,14 @@ export default function TutorWidget() {
       {/* Floating Button */}
       <Fab
         sx={{
-          display: open ? 'none' : 'flex',
-          position: 'fixed', bottom: { xs: 16, md: 24 }, right: { xs: 16, md: 24 }, zIndex: 1300,
-          background: 'linear-gradient(135deg,#1a3c6e,#2d5fa0)',
+          display: (open || guideDrawerOpen) ? 'none' : 'flex',
+          position: 'fixed', 
+          bottom: guideActive ? { xs: 60, md: 68 } : { xs: 16, md: 24 }, 
+          right: { xs: 16, md: 24 }, zIndex: 1300,
+          background: '#1a3c6e',
           color: 'white',
-          boxShadow: '0 4px 20px rgba(26,60,110,0.4)',
-          '&:hover': { transform: 'scale(1.08)', background: 'linear-gradient(135deg,#2d5fa0,#1a3c6e)' },
+          boxShadow: '0 4px 20px rgba(26,60,110,0.25)',
+          '&:hover': { transform: 'scale(1.08)', background: '#0e2444' },
           transition: 'all 0.2s',
           width: { xs: 52, md: 60 },
           height: { xs: 52, md: 60 },
@@ -101,17 +104,19 @@ export default function TutorWidget() {
         anchor="right"
         open={open}
         onClose={() => setOpen(false)}
-        PaperProps={{
-          sx: {
-            width: '100%',
-            maxWidth: 420,
-            display: 'flex', flexDirection: 'column',
-            boxShadow: '-8px 0 32px rgba(0,0,0,0.12)',
+        slotProps={{
+          paper: {
+            sx: {
+              width: '100%',
+              maxWidth: 420,
+              display: 'flex', flexDirection: 'column',
+              boxShadow: '-8px 0 32px rgba(0,0,0,0.12)',
+            },
           },
         }}
       >
         {/* Header */}
-        <Box sx={{ background: 'linear-gradient(135deg,#1a3c6e,#2d5fa0)', color: 'white', p: 2 }}>
+        <Box sx={{ bgcolor: '#1a3c6e', color: 'white', p: 2 }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ width: '100%' }}>
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0, flex: 1, pr: 1 }}>
               <Box
