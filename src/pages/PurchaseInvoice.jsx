@@ -129,11 +129,12 @@ export default function PurchaseInvoice() {
 
   return (
     <Box>
-      {/* ── Sell / Purchase Toggle ── */}
+      {/* ── Invoice Creation Toggle ── */}
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
         <Box sx={{
           display: 'inline-flex', borderRadius: 3, p: 0.5,
           bgcolor: '#f1f5f9', border: '1px solid #e2e8f0',
+          flexWrap: 'wrap', gap: { xs: 0.5, sm: 0 }
         }}>
           <Box
             onClick={() => navigate('/invoices/sell')}
@@ -151,6 +152,16 @@ export default function PurchaseInvoice() {
             display: 'flex', alignItems: 'center', gap: 1,
           }}>
             <BsBoxArrowInDown size={16} /> Purchase Invoice
+          </Box>
+          <Box
+            onClick={() => navigate('/invoices/new')}
+            sx={{
+              px: 3, py: 1, borderRadius: 2.5, fontWeight: 600, fontSize: '0.9rem',
+              color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 1,
+              transition: 'all 0.2s',
+              '&:hover': { bgcolor: '#e2e8f0', color: '#1a3c6e' },
+            }}>
+            <BsReceiptCutoff size={16} /> Quotations
           </Box>
         </Box>
       </Box>

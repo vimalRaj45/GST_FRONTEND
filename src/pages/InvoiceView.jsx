@@ -48,27 +48,32 @@ export default function InvoiceView() {
       });
       
       const imgData = canvas.toDataURL('image/png');
+      const margin = 5; // 5mm margin from all sides
       const pageWidth = 210;
       const pageHeight = 297;
       
       const contentWidth = canvas.width;
       const contentHeight = canvas.height;
       
-      let pdfWidth = pageWidth;
+      const maxPdfWidth = pageWidth - (margin * 2);
+      const maxPdfHeight = pageHeight - (margin * 2);
+      
+      let pdfWidth = maxPdfWidth;
       let pdfHeight = (contentHeight * pdfWidth) / contentWidth;
       
-      if (pdfHeight > pageHeight) {
-        pdfHeight = pageHeight;
+      if (pdfHeight > maxPdfHeight) {
+        pdfHeight = maxPdfHeight;
         pdfWidth = (contentWidth * pdfHeight) / contentHeight;
       }
       
-      const xOffset = (pageWidth - pdfWidth) / 2;
-      const yOffset = (pageHeight - pdfHeight) / 2;
+      const xOffset = margin + (maxPdfWidth - pdfWidth) / 2;
+      const yOffset = margin + (maxPdfHeight - pdfHeight) / 2;
       
       const pdf = new jsPDF('p', 'mm', 'a4');
       pdf.addImage(imgData, 'PNG', xOffset, yOffset, pdfWidth, pdfHeight, undefined, 'FAST');
       
-      pdf.save(`Invoice_${invoice.invoice_number || 'Simulated'}.pdf`);
+      const isQuotation = (invoice.document_type || invoice.invoice_type || 'tax_invoice') === 'quotation';
+      pdf.save(`${isQuotation ? 'Quotation' : 'Invoice'}_${invoice.invoice_number || 'Simulated'}.pdf`);
     } catch (err) {
       console.error('Error generating PDF:', err);
     } finally {
@@ -287,7 +292,7 @@ export default function InvoiceView() {
               </Typography>
               <Box sx={{ p: 1, bgcolor: 'white', border: '1px solid', borderColor: 'divider', borderRadius: 2, display: 'inline-flex', flexDirection: 'column', alignItems: 'center' }}>
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(`upi://pay?pa=aadhira@sbi&pn=Aadhira%20Solutions&am=${(isQuotation ? taxableTotal : grandTotal).toFixed(2)}&cu=INR`)}`}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(`upi://pay?pa=simulate-only@pay&pn=Aadhira%20Solutions&am=${(isQuotation ? taxableTotal : grandTotal).toFixed(2)}&cu=INR`)}`}
                   alt="UPI QR Code"
                   style={{ width: 100, height: 100 }}
                 />
@@ -296,7 +301,7 @@ export default function InvoiceView() {
                 </Typography>
               </Box>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75, fontSize: '0.65rem' }}>
-                UPI ID: aadhira@sbi
+                UPI ID: simulate-only@pay
               </Typography>
             </Grid>
 
@@ -325,7 +330,7 @@ export default function InvoiceView() {
 
           <Box sx={{ mt: 4, pt: 2, borderTop: '1px solid', borderColor: 'divider', textAlign: 'center' }}>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 700, fontSize: '0.78rem' }}>
-              💻 This is a computer-generated invoice and does not require a physical signature.
+              💻 This is a computer-generated {isQuotation ? 'quotation' : 'invoice'} and does not require a physical signature.
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, fontStyle: 'italic', fontSize: '0.7rem' }}>
               ⚠️ Simulated for GST educational sandbox purposes only. Not a legal financial document.

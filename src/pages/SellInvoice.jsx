@@ -9,7 +9,7 @@ import {
   BsCheckCircle, BsGlobe, BsGeoAlt, BsSearch, BsShop, BsBoxArrowUp, BsBoxArrowInDown
 } from 'react-icons/bs';
 import { useNavigate } from 'react-router-dom';
-import { createInvoice, getHsnCodes, listBusinesses, getPeriods } from '../api/client.js';
+import { createInvoice, getHsnCodes, listBusinesses, getPeriods, getProducts } from '../api/client.js';
 import { useAppStore } from '../store/useAppStore.js';
 import ExplainerCallout from '../components/ExplainerCallout.jsx';
 import StatusChip from '../components/StatusChip.jsx';
@@ -65,6 +65,7 @@ export default function SellInvoice() {
   const [items, setItems] = useState([defaultItem()]);
   const [buyers, setBuyers] = useState([]);
   const [periods, setPeriods] = useState([]);
+  const [inventoryProducts, setInventoryProducts] = useState([]);
   const [hsnOptions, setHsnOptions] = useState([]);
   const [hsnLoading, setHsnLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -74,10 +75,14 @@ export default function SellInvoice() {
   useEffect(() => {
     if (sessionId) listBusinesses(sessionId).then(setBuyers).catch(() => {});
     if (business?.id) {
+      setInventoryProducts([]);
       getPeriods(business.id).then((p) => {
         setPeriods(p);
         const open = p.find((x) => x.status === 'open');
         if (open) setHeader((h) => ({ ...h, tax_period_id: open.id }));
+      }).catch(() => {});
+      getProducts(business.id).then((p) => {
+        setInventoryProducts(p);
       }).catch(() => {});
     }
   }, [business?.id, sessionId]);
@@ -137,11 +142,12 @@ export default function SellInvoice() {
 
   return (
     <Box>
-      {/* ── Sell / Purchase Toggle ── */}
+      {/* ── Invoice Creation Toggle ── */}
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
         <Box sx={{
           display: 'inline-flex', borderRadius: 3, p: 0.5,
           bgcolor: '#f1f5f9', border: '1px solid #e2e8f0',
+          flexWrap: 'wrap', gap: { xs: 0.5, sm: 0 }
         }}>
           <Box sx={{
             px: 3, py: 1, borderRadius: 2.5, fontWeight: 700, fontSize: '0.9rem',
@@ -159,6 +165,16 @@ export default function SellInvoice() {
               '&:hover': { bgcolor: '#e2e8f0', color: '#1e3a8a' },
             }}>
             <BsBoxArrowInDown size={16} /> Purchase Invoice
+          </Box>
+          <Box
+            onClick={() => navigate('/invoices/new')}
+            sx={{
+              px: 3, py: 1, borderRadius: 2.5, fontWeight: 600, fontSize: '0.9rem',
+              color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 1,
+              transition: 'all 0.2s',
+              '&:hover': { bgcolor: '#e2e8f0', color: '#1a3c6e' },
+            }}>
+            <BsReceiptCutoff size={16} /> Quotations
           </Box>
         </Box>
       </Box>
@@ -302,15 +318,72 @@ export default function SellInvoice() {
                       </Stack>
                       <Grid container spacing={1.5}>
                         <Grid size={{ xs: 12, sm: 6 }}>
-                          <TextField label="Item Name" value={item.item_name} fullWidth size="small" required
-                            onChange={(e) => updateItem(item._key, 'item_name', e.target.value)} />
+                          <Autocomplete
+                            options={inventoryProducts}
+                            getOptionLabel={(option) => option.name || ''}
+                            value={inventoryProducts.find((p) => p.name === item.item_name) || null}
+                            isOptionEqualToValue={(option, val) => option.id === val?.id}
+                            onChange={(event, newValue) => {
+                              if (newValue) {
+                                updateItem(item._key, 'item_name', newValue.name);
+                                updateItem(item._key, 'unit_price', Number(newValue.unit_price) || 0);
+                                updateItem(item._key, 'tax_rate', Number(newValue.tax_rate) || 18);
+                                updateItem(item._key, 'hsn_code_id', newValue.hsn_code_id || null);
+                                updateItem(item._key, 'hsn_code', newValue.hsn_code || '');
+                              } else {
+                                updateItem(item._key, 'item_name', '');
+                                updateItem(item._key, 'unit_price', 0);
+                                updateItem(item._key, 'tax_rate', 18);
+                                updateItem(item._key, 'hsn_code_id', null);
+                                updateItem(item._key, 'hsn_code', '');
+                              }
+                            }}
+                            renderOption={(props, option) => {
+                              const { key, ...optionProps } = props;
+                              return (
+                                <li key={option.id || key} {...optionProps}>
+                                  <Box>
+                                    <Typography variant="body1">{option.name}</Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                      Price: ₹{option.unit_price} | Stock: {option.stock_qty} | HSN: {option.hsn_code || 'N/A'}
+                                    </Typography>
+                                  </Box>
+                                </li>
+                              );
+                            }}
+                            renderInput={(params) => (
+                              <TextField
+                                {...params}
+                                label="Item Name"
+                                size="small"
+                                required
+                                placeholder="Select a product..."
+                                helperText={inventoryProducts.length === 0 ? "No products found. Add products in the 'Inventory' tab first." : ""}
+                              />
+                            )}
+                          />
                         </Grid>
                         <Grid size={{ xs: 12, sm: 6 }}>
                           <Autocomplete
-                            options={hsnOptions} getOptionLabel={(o) => `${o.code} — ${o.description}`}
+                            options={hsnOptions}
+                            getOptionLabel={(o) => {
+                              if (!o) return '';
+                              return o.description ? `${o.code} — ${o.description}` : `${o.code}`;
+                            }}
+                            value={item.hsn_code_id ? { id: item.hsn_code_id, code: item.hsn_code } : null}
+                            isOptionEqualToValue={(option, val) => option.id === val.id}
                             loading={hsnLoading}
                             onInputChange={(_, v) => searchHSN(v)}
-                            onChange={(_, v) => { if (v) { updateItem(item._key, 'hsn_code_id', v.id); updateItem(item._key, 'hsn_code', v.code); updateItem(item._key, 'tax_rate', v.tax_rate || 18); } }}
+                            onChange={(_, v) => {
+                              if (v) {
+                                updateItem(item._key, 'hsn_code_id', v.id);
+                                updateItem(item._key, 'hsn_code', v.code);
+                                updateItem(item._key, 'tax_rate', v.tax_rate || 18);
+                              } else {
+                                updateItem(item._key, 'hsn_code_id', null);
+                                updateItem(item._key, 'hsn_code', '');
+                              }
+                            }}
                             renderInput={(params) => (
                               <TextField {...params} label="HSN Code (search)" size="small"
                                 InputProps={{ ...params.InputProps, startAdornment: <BsSearch size={14} color="#999" style={{ marginRight: 6 }} /> }} />

@@ -15,7 +15,7 @@ import { useAppStore } from '../store/useAppStore.js';
 
 const MODULES = [
   { key: 'usedCalculator', label: 'Use GST Calculator', desc: 'Calculate CGST, SGST & IGST', icon: BsCalculator, path: '/calculator', color: '#0288d1' },
-  { key: 'createdInvoice', label: 'Create a Tax Invoice', desc: 'Issue your first B2B or B2C invoice', icon: BsReceipt, path: '/invoices/new', color: '#e07b00' },
+  { key: 'createdInvoice', label: 'Create a Tax Invoice', desc: 'Issue your first B2B or B2C invoice', icon: BsReceipt, path: '/invoices/sell', color: '#e07b00' },
   { key: 'viewedLedger', label: 'View ITC Ledger', desc: 'Understand input tax credit tracking', icon: BsWallet2, path: '/ledger', color: '#2e7d32' },
   { key: 'closedPeriod', label: 'Close a Tax Period', desc: 'Generate your GSTR-1 return', icon: BsCalendarCheck, path: '/periods', color: '#6a1b9a' },
   { key: 'viewedGstr1', label: 'View GSTR-1', desc: 'Analyse your outward supply return', icon: BsFileEarmarkText, path: '/periods', color: '#0277bd' },

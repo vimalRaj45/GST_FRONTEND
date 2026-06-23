@@ -228,7 +228,7 @@ export default function Home() {
           <Button
             variant="contained" size="large" color="secondary"
             endIcon={<BsArrowRight />}
-            onClick={() => navigate(business ? '/invoices/new' : '/register-business')}
+            onClick={() => navigate(business ? '/invoices/sell' : '/register-business')}
             sx={{
               py: { xs: 1.5, md: 2 }, px: { xs: 4, md: 5 },
               fontSize: { xs: '1rem', md: '1.1rem' }, borderRadius: 3,

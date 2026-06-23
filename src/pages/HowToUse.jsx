@@ -27,7 +27,7 @@ const guideSteps = [
     icon: <BsReceiptCutoff size={24} color="#e07b00" />,
     description: `Act as a seller and create invoices for your customers. You can sell to B2C (unregistered) or B2B (other registered businesses in the simulator).`,
     action: 'New Invoice',
-    path: '/invoices/new',
+    path: '/invoices/sell',
     tips: [
       'If buyer & seller are in the SAME state → CGST + SGST applied.',
       'If buyer & seller are in DIFFERENT states → IGST applied.',
