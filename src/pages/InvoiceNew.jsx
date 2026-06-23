@@ -94,6 +94,32 @@ export default function InvoiceNew() {
     }
   }, [business]);
 
+  const [selectedDate, setSelectedDate] = useState('');
+  const [periodWarning, setPeriodWarning] = useState(null);
+
+  const handleDateChange = (e) => {
+    const val = e.target.value;
+    setSelectedDate(val);
+    if (!val) {
+      setHeader((h) => ({ ...h, tax_period_id: '' }));
+      setPeriodWarning(null);
+      return;
+    }
+    // timezone-safe parsing
+    const [y, m] = val.split('-');
+    const year = parseInt(y);
+    const month = parseInt(m);
+    
+    const matchingPeriod = periods.find((p) => p.month === month && p.year === year);
+    if (matchingPeriod) {
+      setHeader((h) => ({ ...h, tax_period_id: matchingPeriod.id }));
+      setPeriodWarning(null);
+    } else {
+      setHeader((h) => ({ ...h, tax_period_id: '' }));
+      setPeriodWarning(`No tax period exists for ${month}/${year}. Please choose a date within an active period.`);
+    }
+  };
+
   const selectedBuyer = buyers.find((b) => b.id === header.buyer_business_id);
   const isInterstate = business && selectedBuyer ? business.state_code !== selectedBuyer.state_code : false;
 
@@ -225,14 +251,25 @@ export default function InvoiceNew() {
                 )}
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField select label="Tax Period" value={header.tax_period_id}
-                  onChange={(e) => setHeader((h) => ({ ...h, tax_period_id: e.target.value }))} required fullWidth>
-                  {periods.map((p) => (
-                    <MenuItem key={p.id} value={p.id}>
-                      {p.month}/{p.year} ({p.status.toUpperCase()})
-                    </MenuItem>
-                  ))}
-                </TextField>
+                <TextField
+                  type="date"
+                  label="Document Date"
+                  value={selectedDate}
+                  onChange={handleDateChange}
+                  required
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                />
+                {header.tax_period_id && (
+                  <Typography variant="caption" color="success.main" sx={{ mt: 0.5, display: 'block', fontWeight: 700 }}>
+                    ✓ Matched Period: {periods.find(p => p.id === header.tax_period_id)?.month}/{periods.find(p => p.id === header.tax_period_id)?.year} ({periods.find(p => p.id === header.tax_period_id)?.status.toUpperCase()})
+                  </Typography>
+                )}
+                {periodWarning && (
+                  <Typography variant="caption" color="error.main" sx={{ mt: 0.5, display: 'block', fontWeight: 700 }}>
+                    ⚠ {periodWarning}
+                  </Typography>
+                )}
               </Grid>
               {isInterstate && (
                 <Grid size={12}>
