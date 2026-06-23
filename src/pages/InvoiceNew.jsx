@@ -79,8 +79,6 @@ export default function InvoiceNew() {
     if (business?.id) {
       getPeriods(business.id).then((p) => {
         setPeriods(p);
-        const open = p.find((x) => x.status === 'open');
-        if (open) setHeader((h) => ({ ...h, tax_period_id: open.id }));
       }).catch(() => {});
     }
   }, [business?.id, sessionId]);
@@ -229,8 +227,10 @@ export default function InvoiceNew() {
               <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField select label="Tax Period" value={header.tax_period_id}
                   onChange={(e) => setHeader((h) => ({ ...h, tax_period_id: e.target.value }))} required fullWidth>
-                  {periods.filter((p) => p.status === 'open').map((p) => (
-                    <MenuItem key={p.id} value={p.id}>{p.month}/{p.year}</MenuItem>
+                  {periods.map((p) => (
+                    <MenuItem key={p.id} value={p.id}>
+                      {p.month}/{p.year} ({p.status.toUpperCase()})
+                    </MenuItem>
                   ))}
                 </TextField>
               </Grid>
