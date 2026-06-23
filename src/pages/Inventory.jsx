@@ -5,10 +5,6 @@ import {
   Card, CardContent, Grid, IconButton, Autocomplete, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow, Paper, Tooltip
 } from '@mui/material';
-import {
-  BsBoxSeam, BsPlusCircle, BsTrash, BsExclamationTriangle,
-  BsPencil, BsSearch, BsCheckCircle, BsArrowRepeat
-} from 'react-icons/png'; // wait, react-icons/bs is used elsewhere. Let's use react-icons/bs!
 import { BsBoxSeam as BoxIcon, BsPlusCircle as PlusIcon, BsTrash as TrashIcon, BsExclamationTriangle as AlertIcon, BsPencil as EditIcon, BsSearch as SearchIcon, BsCheckCircle as CheckIcon, BsArrowRepeat as SyncIcon } from 'react-icons/bs';
 import { getProducts, createProduct, updateProductStock, deleteProduct, getHsnCodes } from '../api/client.js';
 import { useAppStore } from '../store/useAppStore.js';
