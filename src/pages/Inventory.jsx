@@ -3,7 +3,7 @@ import {
   Box, Typography, Alert, CircularProgress, Stack, TextField,
   Dialog, DialogTitle, DialogContent, DialogActions, Button, Chip,
   Card, CardContent, Grid, IconButton, Autocomplete, Table, TableBody,
-  TableCell, TableContainer, TableHead, TableRow, Paper, Tooltip
+  TableCell, TableContainer, TableHead, TableRow, Paper, Tooltip, MenuItem
 } from '@mui/material';
 import { BsBoxSeam as BoxIcon, BsPlusCircle as PlusIcon, BsTrash as TrashIcon, BsExclamationTriangle as AlertIcon, BsPencil as EditIcon, BsSearch as SearchIcon, BsCheckCircle as CheckIcon, BsArrowRepeat as SyncIcon } from 'react-icons/bs';
 import { getProducts, createProduct, updateProductStock, deleteProduct, getHsnCodes } from '../api/client.js';
@@ -383,13 +383,12 @@ export default function Inventory() {
                   onChange={(e) => setNewProduct({ ...newProduct, tax_rate: Number(e.target.value) })}
                   fullWidth
                   size="small"
-                  SelectProps={{ native: true }}
                 >
-                  <option value="0">0%</option>
-                  <option value="5">5%</option>
-                  <option value="12">12%</option>
-                  <option value="18">18%</option>
-                  <option value="28">28%</option>
+                  <MenuItem value={0}>0%</MenuItem>
+                  <MenuItem value={5}>5%</MenuItem>
+                  <MenuItem value={12}>12%</MenuItem>
+                  <MenuItem value={18}>18%</MenuItem>
+                  <MenuItem value={28}>28%</MenuItem>
                 </TextField>
               </Grid>
               <Grid size={{ xs: 6 }}>
