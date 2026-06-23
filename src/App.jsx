@@ -144,16 +144,16 @@ function Layout({ children }) {
                     <Button
                       onClick={() => navigate(item.path)}
                       sx={{
-                        px: { xs: 1, xl: 1.5 }, py: 0.75, borderRadius: 2, color: active ? 'primary.main' : 'text.secondary',
+                        px: { xs: 1, lg: 1.5 }, py: 0.75, borderRadius: 2, color: active ? 'primary.main' : 'text.secondary',
                         bgcolor: active ? 'rgba(26,60,110,0.06)' : 'transparent',
                         fontWeight: active ? 700 : 500, fontSize: '0.85rem',
                         whiteSpace: 'nowrap',
-                        minWidth: { xs: 'auto', xl: '64px' },
+                        minWidth: { xs: 'auto', lg: '64px' },
                         '&:hover': { bgcolor: 'rgba(26,60,110,0.04)' },
                       }}
                     >
                       <Icon size={15} />
-                      <Box component="span" sx={{ display: { xs: 'none', xl: 'inline' }, ml: 0.75 }}>
+                      <Box component="span" sx={{ display: { xs: 'none', lg: 'inline' }, ml: 0.75 }}>
                         {item.label}
                       </Box>
                     </Button>
